@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: #FAF6EE;
+    --foreground: #1E202A;
+    --card: #FFFFFF;
+    --card-foreground: #1E202A;
+    --popover: #FFFFFF;
+    --popover-foreground: #1E202A;
+    --primary: #4F46E5;
+    --primary-foreground: #FFFFFF;
+    --secondary: #F3ECE2;
+    --secondary-foreground: #2D303E;
+    --muted: #EFE8DC;
+    --muted-foreground: #646777;
+    --accent: #D97706;
+    --accent-foreground: #FFFFFF;
+    --destructive: #DC2626;
+    --destructive-foreground: #FFFFFF;
+    --border: #E6DDCF;
+    --input: #FFFFFF;
+    --ring: #4F46E5;
+  }
+}
+
+body {
+  background-color: #FAF6EE;
+  color: #1E202A;
+  font-family: var(--font-inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F3ECE2;
+}
+::-webkit-scrollbar-thumb {
+  background: #D5C9B8;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B8A994;
+}
+
+/* Glassmorphic UI utilities for Warm Cream Light Mode */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.90);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(214, 203, 188, 0.65);
+  box-shadow: 0 10px 25px -5px rgba(180, 160, 140, 0.12), 0 4px 6px -2px rgba(180, 160, 140, 0.05);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(225, 215, 200, 0.7);
+  box-shadow: 0 4px 15px -2px rgba(180, 160, 140, 0.08);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  background: #FFFFFF;
+  border-color: rgba(79, 70, 229, 0.45);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -8px rgba(79, 70, 229, 0.15), 0 4px 10px -2px rgba(180, 160, 140, 0.1);
+}
+
+.glass-input {
+  background: #FFFFFF;
+  border: 1px solid #DCD2C3;
+  color: #1E202A;
+  transition: all 0.2s ease;
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.pulse-glow {
+  animation: pulse-glow 2.5s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(79, 70, 229, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(79, 70, 229, 0.4);
+  }
+}
+
+.badge-glow {
+  text-shadow: 0 0 8px currentColor;
+}
