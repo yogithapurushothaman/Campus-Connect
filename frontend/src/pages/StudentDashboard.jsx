@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Navbar } from '../components/Navbar';
+import { RaiseIssueForm } from '../components/RaiseIssueForm';
+import { MyComplaintsTracker } from '../components/MyComplaintsTracker';
 import {
   Users,
   Calendar,
@@ -18,11 +20,12 @@ import confetti from 'canvas-confetti';
 
 export const StudentDashboard = () => {
   const { user, authFetch } = useAuth();
-  const [activeTab, setActiveTab] = useState('activities');
+  const [activeTab, setActiveTab] = useState('complaints');
 
   const [activities, setActivities] = useState([]);
   const [events, setEvents] = useState([]);
   const [complaints, setComplaints] = useState([]);
+  const [complaintsLoading, setComplaintsLoading] = useState(false);
   const [rsvpedEvents, setRsvpedEvents] = useState(new Set());
 
   // Wayfinding State
@@ -30,16 +33,26 @@ export const StudentDashboard = () => {
   const [destBld, setDestBld] = useState('bld_eng_1');
   const [routeData, setRouteData] = useState(null);
 
-  // New Complaint State
-  const [cmpTitle, setCmpTitle] = useState('');
-  const [cmpDesc, setCmpDesc] = useState('');
-  const [cmpBuilding, setCmpBuilding] = useState('Alan Turing CS Block');
-  const [showCmpModal, setShowCmpModal] = useState(false);
   const [toastMsg, setToastMsg] = useState(null);
 
   const showToast = (msg) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 3500);
+  };
+
+  const loadComplaints = async () => {
+    setComplaintsLoading(true);
+    try {
+      const res = await authFetch('/api/complaints/me');
+      if (res.ok) {
+        const d = await res.json();
+        setComplaints(d.complaints || []);
+      }
+    } catch (err) {
+      console.error('Failed to load my complaints:', err);
+    } finally {
+      setComplaintsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -49,7 +62,7 @@ export const StudentDashboard = () => {
         const [actRes, evRes, cmpRes] = await Promise.all([
           authFetch('/api/activities'),
           authFetch('/api/events'),
-          authFetch('/api/complaints'),
+          authFetch('/api/complaints/me'),
         ]);
 
         if (actRes.ok) {
@@ -109,29 +122,9 @@ export const StudentDashboard = () => {
     }
   };
 
-  const handleSubmitComplaint = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await authFetch('/api/complaints', {
-        method: 'POST',
-        body: JSON.stringify({
-          title: cmpTitle,
-          description: cmpDesc,
-          buildingName: cmpBuilding,
-          roomOrArea: 'General Campus Area',
-        }),
-      });
-      if (res.ok) {
-        const d = await res.json();
-        setComplaints((prev) => [d.complaint, ...prev]);
-        setShowCmpModal(false);
-        setCmpTitle('');
-        setCmpDesc('');
-        showToast(`🛡️ Ticket #${d.complaint.ticketNumber} triaged by AI!`);
-      }
-    } catch (e) {
-      showToast('Error filing complaint.');
-    }
+  const handleComplaintAdded = (newComplaint) => {
+    setComplaints((prev) => [newComplaint, ...prev]);
+    showToast(`🛡️ Ticket #${newComplaint.ticketNumber || 'TKT'} submitted successfully!`);
   };
 
   return (
@@ -156,16 +149,27 @@ export const StudentDashboard = () => {
             </div>
 
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setShowCmpModal(true)} className="btn btn-secondary btn-sm" style={{ color: 'var(--primary)', fontWeight: '700' }}>
+              <button
+                onClick={() => setActiveTab('complaints')}
+                className="btn btn-secondary btn-sm"
+                style={{ color: 'var(--primary)', fontWeight: '700' }}
+              >
                 <Plus size={16} />
-                <span>Report Issue</span>
+                <span>Raise Campus Issue</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Tab Selection */}
-        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setActiveTab('complaints')}
+            className={`btn btn-sm ${activeTab === 'complaints' ? 'btn-primary' : 'btn-secondary'}`}
+          >
+            <ShieldAlert size={16} />
+            <span>Campus Care</span>
+          </button>
           <button
             onClick={() => setActiveTab('activities')}
             className={`btn btn-sm ${activeTab === 'activities' ? 'btn-primary' : 'btn-secondary'}`}
@@ -187,16 +191,24 @@ export const StudentDashboard = () => {
             <MapPin size={16} />
             <span>Campus Map & Routing</span>
           </button>
-          <button
-            onClick={() => setActiveTab('complaints')}
-            className={`btn btn-sm ${activeTab === 'complaints' ? 'btn-primary' : 'btn-secondary'}`}
-          >
-            <ShieldAlert size={16} />
-            <span>Campus Care</span>
-          </button>
         </div>
 
-        {/* TAB 1: ACTIVITIES */}
+        {/* TAB 1: CAMPUS CARE (COMPLAINTS) */}
+        {activeTab === 'complaints' && (
+          <section>
+            {/* 1. Raise an Issue Form */}
+            <RaiseIssueForm onComplaintSubmitted={handleComplaintAdded} />
+
+            {/* 2. My Complaints Tracker Component */}
+            <MyComplaintsTracker
+              complaints={complaints}
+              loading={complaintsLoading}
+              onRefresh={loadComplaints}
+            />
+          </section>
+        )}
+
+        {/* TAB 2: ACTIVITIES */}
         {activeTab === 'activities' && (
           <section>
             <div className="glass-card" style={{ padding: '20px', marginBottom: '20px', borderLeft: '4px solid var(--primary)', background: 'linear-gradient(135deg, rgba(238, 242, 255, 0.7) 0%, #FFFFFF 100%)' }}>
@@ -240,7 +252,7 @@ export const StudentDashboard = () => {
           </section>
         )}
 
-        {/* TAB 2: EVENTS */}
+        {/* TAB 3: EVENTS */}
         {activeTab === 'events' && (
           <section>
             <div className="grid-3">
@@ -277,7 +289,7 @@ export const StudentDashboard = () => {
           </section>
         )}
 
-        {/* TAB 3: MAP & ROUTING */}
+        {/* TAB 4: MAP & ROUTING */}
         {activeTab === 'map' && (
           <section className="grid-2">
             <div className="glass-card" style={{ padding: '24px' }}>
@@ -331,78 +343,10 @@ export const StudentDashboard = () => {
           </section>
         )}
 
-        {/* TAB 4: COMPLAINTS */}
-        {activeTab === 'complaints' && (
-          <section>
-            <div className="grid-2">
-              {complaints.map((cmp) => (
-                <div key={cmp.id} className="glass-card" style={{ padding: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '0.85rem' }}>#{cmp.ticketNumber}</span>
-                    <span className={`status-pill status-${cmp.status}`}>{cmp.status}</span>
-                  </div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '6px' }}>{cmp.title}</h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '10px' }}>{cmp.description}</p>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    📍 {cmp.buildingName} • ⚙️ {cmp.assignedTeam}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
         {/* Floating Toast */}
         {toastMsg && (
           <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#1E202A', color: '#fff', padding: '12px 20px', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', zIndex: 100 }}>
             {toastMsg}
-          </div>
-        )}
-
-        {/* Submit Complaint Modal */}
-        {showCmpModal && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
-            <div className="glass-card" style={{ maxWidth: 480, width: '100%', padding: 24, background: '#fff' }}>
-              <h3 style={{ fontWeight: '800', fontSize: '1.2rem', marginBottom: 16 }}>🛡️ Report Campus Issue</h3>
-              <form onSubmit={handleSubmitComplaint}>
-                <div className="form-group">
-                  <label className="form-label">Issue Title:</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. Wi-Fi dropping in Lab 304"
-                    value={cmpTitle}
-                    onChange={(e) => setCmpTitle(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Building:</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={cmpBuilding}
-                    onChange={(e) => setCmpBuilding(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Description:</label>
-                  <textarea
-                    className="form-textarea"
-                    rows="3"
-                    placeholder="Describe the issue..."
-                    value={cmpDesc}
-                    onChange={(e) => setCmpDesc(e.target.value)}
-                    required
-                  />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-                  <button type="button" onClick={() => setShowCmpModal(false)} className="btn btn-secondary btn-sm">Cancel</button>
-                  <button type="submit" className="btn btn-primary btn-sm">Submit Ticket</button>
-                </div>
-              </form>
-            </div>
           </div>
         )}
 

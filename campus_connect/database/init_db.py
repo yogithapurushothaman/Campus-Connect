@@ -185,10 +185,11 @@ def init_database():
     complaint1 = Complaint(
         ticket_number="TKT-2026-8841",
         title="High-Speed Wi-Fi Router Intermittent in CS Lab 304",
-        category="wifi",
-        priority="high",
-        status="in_progress",
+        category="Wi-Fi",
+        priority="High",
+        status="In Progress",
         is_anonymous=False,
+        student_id=student_user.id,
         author_id=student_user.id,
         author_name=student_user.name,
         building_id="bld_eng_1",
@@ -201,12 +202,52 @@ def init_database():
         upvotes=14,
         triage_confidence=0.95,
     )
-    session.add(complaint1)
+    complaint2 = Complaint(
+        ticket_number="TKT-2026-4129",
+        title="Water Cooler Filter Replacement Needed in Block B Mess",
+        category="Mess",
+        priority="Medium",
+        status="Submitted",
+        is_anonymous=False,
+        student_id=student_user.id,
+        author_id=student_user.id,
+        author_name=student_user.name,
+        building_id="bld_food_1",
+        building_name="Student Center & Dining Hall",
+        room_or_area="Main Dining Mess 2",
+        description="The water dispenser filter indicator on 2nd floor mess turned red and water flow is restricted.",
+        assigned_to="",
+        assigned_team="Campus Facilities Division",
+        admin_notes="",
+        upvotes=5,
+        triage_confidence=0.89,
+    )
+    complaint3 = Complaint(
+        ticket_number="TKT-2026-2301",
+        title="Projector HDMI Cable Faulty in Room 102 Lecture Hall",
+        category="Infrastructure",
+        priority="Low",
+        status="Resolved",
+        is_anonymous=False,
+        student_id=student_user.id,
+        author_id=student_user.id,
+        author_name=student_user.name,
+        building_id="bld_eng_1",
+        building_name="Alan Turing Computer Science Block",
+        room_or_area="Lecture Hall 102",
+        description="HDMI port flickering when connecting laptops during seminar presentations.",
+        assigned_to="AV Support Team",
+        assigned_team="Campus Facilities Division",
+        admin_notes="Replaced with new 4K Gold-plated HDMI Cable and tested with projector.",
+        upvotes=8,
+        triage_confidence=0.94,
+    )
+    session.add_all([complaint1, complaint2, complaint3])
     session.flush()
 
     timeline1 = ComplaintTimeline(
         complaint_id=complaint1.id,
-        status="submitted",
+        status="Submitted",
         label="Ticket Submitted",
         timestamp="Yesterday 10:15 AM",
         note="Complaint logged by student.",
@@ -214,19 +255,19 @@ def init_database():
     )
     timeline2 = ComplaintTimeline(
         complaint_id=complaint1.id,
-        status="acknowledged",
-        label="Acknowledged by Faculty Advisor",
-        timestamp="Yesterday 02:30 PM",
-        note="Verified by Dr. Vikram Sen. Ticket routed to Network Cell.",
-        updated_by="Dr. Vikram Sen",
-    )
-    timeline3 = ComplaintTimeline(
-        complaint_id=complaint1.id,
-        status="in_progress",
+        status="In Progress",
         label="Work In Progress",
         timestamp="Today 09:00 AM",
         note="Replacement access point dispatched.",
         updated_by="Campus IT Operations",
+    )
+    timeline3 = ComplaintTimeline(
+        complaint_id=complaint3.id,
+        status="Resolved",
+        label="Resolved & Verified",
+        timestamp="2 days ago",
+        note="AV Support technician replaced cabling.",
+        updated_by="Facilities Support",
     )
     session.add_all([timeline1, timeline2, timeline3])
 

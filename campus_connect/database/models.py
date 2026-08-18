@@ -40,7 +40,7 @@ class User(Base):
 
     # Relationships
     events = relationship("Event", back_populates="author", cascade="all, delete-orphan")
-    complaints = relationship("Complaint", back_populates="author")
+    complaints = relationship("Complaint", foreign_keys="[Complaint.author_id]", back_populates="author")
     club_applications = relationship("ClubApplicant", foreign_keys="[ClubApplicant.user_id]", back_populates="user")
 
     def to_dict(self):
@@ -228,10 +228,11 @@ class Complaint(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     ticket_number = Column(String(50), unique=True, nullable=False)
     title = Column(String(200), nullable=False)
-    category = Column(String(50), default="infrastructure")
-    priority = Column(String(30), default="medium")
-    status = Column(String(30), default="submitted")
+    category = Column(String(50), default="Infrastructure")
+    priority = Column(String(30), default="Medium")
+    status = Column(String(30), default="Submitted")
     is_anonymous = Column(Boolean, default=False)
+    student_id = Column(String(36), ForeignKey("users.id"), nullable=True)
     author_id = Column(String(36), ForeignKey("users.id"), nullable=True)
     author_name = Column(String(100), default="Anonymous Student")
     building_id = Column(String(50), default="bld_eng_1")
@@ -249,33 +250,76 @@ class Complaint(Base):
     updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 
     # Relationships
-    author = relationship("User", back_populates="complaints")
+    author = relationship("User", foreign_keys=[author_id], back_populates="complaints")
     timeline = relationship("ComplaintTimeline", back_populates="complaint", cascade="all, delete-orphan")
 
     def to_dict(self):
+        # Normalize status display
+        raw_status = str(self.status).strip().lower()
+        if raw_status in ("submitted", "new", "open"):
+            normalized_status = "Submitted"
+        elif raw_status in ("in_progress", "in progress", "assigned", "acknowledged"):
+            normalized_status = "In Progress"
+        elif raw_status in ("resolved", "completed", "closed"):
+            normalized_status = "Resolved"
+        else:
+            normalized_status = self.status.title() if self.status else "Submitted"
+
+        # Normalize category display
+        cat_lower = str(self.category).strip().lower()
+        if "wifi" in cat_lower or "wi-fi" in cat_lower or "network" in cat_lower or "internet" in cat_lower:
+            normalized_category = "Wi-Fi"
+        elif "mess" in cat_lower or "food" in cat_lower or "canteen" in cat_lower or "dining" in cat_lower:
+            normalized_category = "Mess"
+        elif "infra" in cat_lower or "water" in cat_lower or "electric" in cat_lower or "room" in cat_lower or "light" in cat_lower:
+            normalized_category = "Infrastructure"
+        elif "other" in cat_lower:
+            normalized_category = "Other"
+        else:
+            normalized_category = self.category.title() if self.category else "Other"
+
+        sid = self.student_id or self.author_id
+
         return {
             "id": self.id,
+            "student_id": sid,
+            "studentId": sid,
+            "ticket_number": self.ticket_number,
             "ticketNumber": self.ticket_number,
             "title": self.title,
-            "category": self.category,
-            "priority": self.priority,
-            "status": self.status,
-            "isAnonymous": self.is_anonymous,
-            "authorId": self.author_id if not self.is_anonymous else None,
-            "authorName": self.author_name if not self.is_anonymous else "Verified Student (Anonymous)",
-            "buildingId": self.building_id,
-            "buildingName": self.building_name,
-            "roomOrArea": self.room_or_area,
             "description": self.description,
+            "category": normalized_category,
+            "priority": self.priority,
+            "status": normalized_status,
+            "is_anonymous": self.is_anonymous,
+            "isAnonymous": self.is_anonymous,
+            "author_id": sid,
+            "authorId": sid,
+            "author_name": self.author_name if not self.is_anonymous else "Verified Student (Anonymous)",
+            "authorName": self.author_name if not self.is_anonymous else "Verified Student (Anonymous)",
+            "building_id": self.building_id,
+            "buildingId": self.building_id,
+            "building_name": self.building_name,
+            "buildingName": self.building_name,
+            "room_or_area": self.room_or_area,
+            "roomOrArea": self.room_or_area,
+            "photo_url": self.photo_url,
             "photoUrl": self.photo_url,
+            "assigned_to": self.assigned_to,
             "assignedTo": self.assigned_to,
+            "assigned_team": self.assigned_team,
             "assignedTeam": self.assigned_team,
+            "admin_notes": self.admin_notes,
             "adminNotes": self.admin_notes,
+            "resolution_proof_photo": self.resolution_proof_photo,
             "resolutionProofPhoto": self.resolution_proof_photo,
             "upvotes": self.upvotes,
+            "triage_confidence": self.triage_confidence,
             "triageConfidence": self.triage_confidence,
             "timeline": [t.to_dict() for t in self.timeline],
+            "created_at": self.created_at.isoformat() if self.created_at else None,
             "createdAt": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
             "updatedAt": self.updated_at.isoformat() if self.updated_at else None,
         }
 

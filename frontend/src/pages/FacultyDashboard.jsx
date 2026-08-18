@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Navbar } from '../components/Navbar';
+import { FacultyKanbanBoard } from '../components/FacultyKanbanBoard';
 import {
   Briefcase,
   Plus,
@@ -11,12 +12,13 @@ import {
   Calendar,
   AlertTriangle,
   Send,
-  Users
+  Users,
+  ShieldAlert
 } from 'lucide-react';
 
 export const FacultyDashboard = () => {
   const { user, authFetch } = useAuth();
-  const [activeTab, setActiveTab] = useState('events');
+  const [activeTab, setActiveTab] = useState('complaints');
 
   const [events, setEvents] = useState([]);
   const [clubs, setClubs] = useState([]);
@@ -111,19 +113,11 @@ export const FacultyDashboard = () => {
     }
   };
 
-  const handleComplaintStatusUpdate = async (complaintId, status) => {
-    try {
-      const res = await authFetch(`/api/complaints/${complaintId}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status }),
-      });
-      if (res.ok) {
-        showToast(`🛡️ Ticket status updated to "${status}".`);
-        loadData();
-      }
-    } catch (e) {
-      showToast('Failed to update ticket status.');
-    }
+  const handleStatusUpdated = (updatedComplaint) => {
+    setComplaints((prev) =>
+      prev.map((c) => (c.id === updatedComplaint.id ? updatedComplaint : c))
+    );
+    showToast(`🛡️ Ticket #${updatedComplaint.ticketNumber} moved to "${updatedComplaint.status}".`);
   };
 
   return (
@@ -140,10 +134,10 @@ export const FacultyDashboard = () => {
                 <span>FACULTY COMMAND CENTER • RBAC AUTHORIZED</span>
               </div>
               <h1 style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '4px' }}>
-                {user?.name || 'Dr. Vikram Sen'}
+                Welcome, {user?.name || 'Faculty Member'}
               </h1>
               <p style={{ opacity: 0.9, fontSize: '0.9rem' }}>
-                {user?.department} • ID: {user?.studentOrFacultyId || 'FAC-CS-104'} • Designation: {user?.designation || 'Professor & Club Advisor'}
+                {user?.designation} • {user?.department} • ID: {user?.studentOrFacultyId || 'FAC-CS-104'}
               </p>
             </div>
 
@@ -156,8 +150,15 @@ export const FacultyDashboard = () => {
           </div>
         </div>
 
-        {/* Tab Selection */}
-        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+        {/* Navigation Tabs */}
+        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setActiveTab('complaints')}
+            className={`btn btn-sm ${activeTab === 'complaints' ? 'btn-faculty' : 'btn-secondary'}`}
+          >
+            <ShieldAlert size={16} />
+            <span>Campus Care Triage Board</span>
+          </button>
           <button
             onClick={() => setActiveTab('events')}
             className={`btn btn-sm ${activeTab === 'events' ? 'btn-faculty' : 'btn-secondary'}`}
@@ -169,32 +170,45 @@ export const FacultyDashboard = () => {
             onClick={() => setActiveTab('clubs')}
             className={`btn btn-sm ${activeTab === 'clubs' ? 'btn-faculty' : 'btn-secondary'}`}
           >
-            <Users size={16} />
-            <span>Club Advisor Approvals</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('complaints')}
-            className={`btn btn-sm ${activeTab === 'complaints' ? 'btn-faculty' : 'btn-secondary'}`}
-          >
-            <AlertTriangle size={16} />
-            <span>Campus Care Triage ({complaints.length})</span>
+            <Briefcase size={16} />
+            <span>Club Advisor Workbench</span>
           </button>
         </div>
 
-        {/* TAB 1: OFFICIAL EVENTS */}
+        {/* TAB 1: CAMPUS CARE KANBAN TRIAGE */}
+        {activeTab === 'complaints' && (
+          <section>
+            <FacultyKanbanBoard
+              complaints={complaints}
+              onStatusUpdate={handleStatusUpdated}
+              onRefresh={loadData}
+            />
+          </section>
+        )}
+
+        {/* TAB 2: EVENTS WORKSPACE */}
         {activeTab === 'events' && (
           <section>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>Official Campus Events & Hackathons</h3>
+              <button onClick={() => setShowEventModal(true)} className="btn btn-faculty btn-sm">
+                <Plus size={16} />
+                <span>New Event</span>
+              </button>
+            </div>
+
             <div className="grid-3">
               {events.map((ev) => (
                 <div key={ev.id} className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <span className="status-pill status-accepted">Official Campus Event</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{ev.category}</span>
+                      <span className="status-pill status-acknowledged">{ev.category}</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)' }}>{ev.department}</span>
                     </div>
-                    <h3 style={{ fontSize: '1.15rem', fontWeight: '800', marginBottom: '6px' }}>{ev.title}</h3>
+                    <h4 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '6px' }}>{ev.title}</h4>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '12px' }}>{ev.description}</p>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <div>📅 {ev.date}</div>
                       <div>📍 {ev.locationName}</div>
                     </div>
@@ -209,7 +223,7 @@ export const FacultyDashboard = () => {
           </section>
         )}
 
-        {/* TAB 2: CLUB ADVISOR WORKBENCH */}
+        {/* TAB 3: CLUB ADVISOR WORKBENCH */}
         {activeTab === 'clubs' && (
           <section>
             <div className="glass-card" style={{ padding: '24px' }}>
@@ -241,43 +255,6 @@ export const FacultyDashboard = () => {
                   ))}
                 </div>
               )}
-            </div>
-          </section>
-        )}
-
-        {/* TAB 3: CAMPUS CARE TRIAGE */}
-        {activeTab === 'complaints' && (
-          <section>
-            <div className="glass-card" style={{ padding: '24px' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '16px' }}>🛡️ Departmental Campus Care Triage</h3>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {complaints.map((c) => (
-                  <div key={c.id} style={{ background: '#F8FAFC', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                    <div style={{ maxWidth: '650px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                        <span style={{ fontWeight: '800', color: 'var(--faculty-accent)', fontSize: '0.85rem' }}>#{c.ticketNumber}</span>
-                        <span className={`status-pill status-${c.status}`}>{c.status}</span>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>📍 {c.buildingName}</span>
-                      </div>
-                      <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>{c.title}</div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{c.description}</div>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                      <button onClick={() => handleComplaintStatusUpdate(c.id, 'acknowledged')} className="btn btn-secondary btn-sm">
-                        Acknowledge
-                      </button>
-                      <button onClick={() => handleComplaintStatusUpdate(c.id, 'in_progress')} className="btn btn-secondary btn-sm">
-                        In Progress
-                      </button>
-                      <button onClick={() => handleComplaintStatusUpdate(c.id, 'resolved')} className="btn btn-success btn-sm">
-                        Mark Resolved
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           </section>
         )}
