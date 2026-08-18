@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Institutional Login — CampusConnect{% endblock %}
+
+{% block content %}
+<div style="max-width: 480px; width: 100%; margin: 40px auto;">
+  <div class="glass-card" style="padding: 32px;">
+    
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="font-size: 2.5rem; margin-bottom: 8px;">🎓</div>
+      <h1 style="font-size: 1.5rem; font-weight: 800;">CampusConnect Login</h1>
+      <p style="color: var(--text-muted); font-size: 0.875rem;">Official Institutional Portal Access</p>
+    </div>
+
+    <!-- Role Switcher Tabs -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #F1F5F9; padding: 4px; border-radius: var(--radius-md); margin-bottom: 20px;">
+      <button type="button" id="roleTabStudent" onclick="selectLoginRole('STUDENT')" class="btn btn-secondary btn-sm" style="background: #fff; font-weight: 700; color: var(--student-accent);">
+        👨‍🎓 Student
+      </button>
+      <button type="button" id="roleTabFaculty" onclick="selectLoginRole('FACULTY')" class="btn btn-secondary btn-sm" style="background: transparent; color: var(--text-muted);">
+        👨‍🏫 Faculty / Staff
+      </button>
+    </div>
+
+    <!-- Quick Demo Accounts Chip Bar -->
+    <div style="background: #F8FAFC; border: 1px dashed var(--border-color); border-radius: var(--radius-md); padding: 12px; margin-bottom: 20px; font-size: 0.8rem;">
+      <div style="font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">⚡ Quick Demo 1-Click Login:</div>
+      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <button type="button" onclick="fillDemoCredentials('prof.vikram@college.edu', 'password123', 'FACULTY')" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 4px 8px;">
+          👨‍🏫 Dr. Vikram (Faculty)
+        </button>
+        <button type="button" onclick="fillDemoCredentials('ananya@campus.edu', 'password123', 'STUDENT')" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 4px 8px;">
+          👩‍🎓 Ananya (Student)
+        </button>
+      </div>
+    </div>
+
+    <!-- Error Box -->
+    <div id="loginErrorBox" style="display: none; background: var(--danger-light); color: var(--danger); border: 1px solid #FECACA; padding: 10px 14px; border-radius: var(--radius-md); font-size: 0.85rem; margin-bottom: 16px;"></div>
+
+    <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+      <input type="hidden" id="loginRoleInput" value="STUDENT">
+      
+      <div class="form-group">
+        <label class="form-label">Official College Email:</label>
+        <input type="email" id="loginEmailInput" class="form-input" placeholder="e.g. ananya@campus.edu or prof.vikram@college.edu" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password:</label>
+        <input type="password" id="loginPasswordInput" class="form-input" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width: 100%; margin-top: 8px;">
+        Sign In to Portal →
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 20px; font-size: 0.85rem; color: var(--text-muted);">
+      Don't have an account? <a href="/signup" style="color: var(--primary); font-weight: 700; text-decoration: none;">Register here</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let currentSelectedRole = 'STUDENT';
+
+function selectLoginRole(role) {
+  currentSelectedRole = role;
+  document.getElementById('loginRoleInput').value = role;
+  const sBtn = document.getElementById('roleTabStudent');
+  const fBtn = document.getElementById('roleTabFaculty');
+  
+  if (role === 'STUDENT') {
+    sBtn.style.background = '#fff';
+    sBtn.style.color = 'var(--student-accent)';
+    sBtn.style.fontWeight = '700';
+    fBtn.style.background = 'transparent';
+    fBtn.style.color = 'var(--text-muted)';
+    fBtn.style.fontWeight = '500';
+  } else {
+    fBtn.style.background = '#fff';
+    fBtn.style.color = 'var(--faculty-accent)';
+    fBtn.style.fontWeight = '700';
+    sBtn.style.background = 'transparent';
+    sBtn.style.color = 'var(--text-muted)';
+    sBtn.style.fontWeight = '500';
+  }
+}
+
+function fillDemoCredentials(email, password, role) {
+  document.getElementById('loginEmailInput').value = email;
+  document.getElementById('loginPasswordInput').value = password;
+  selectLoginRole(role);
+}
+
+async function handleLoginSubmit(e) {
+  e.preventDefault();
+  const email = document.getElementById('loginEmailInput').value.trim();
+  const password = document.getElementById('loginPasswordInput').value;
+  const role = document.getElementById('loginRoleInput').value;
+  const errorBox = document.getElementById('loginErrorBox');
+  const submitBtn = document.getElementById('loginSubmitBtn');
+  
+  errorBox.style.display = 'none';
+  submitBtn.disabled = true;
+  submitBtn.innerText = 'Authenticating...';
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, role })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      errorBox.innerText = data.error || 'Login failed. Please check credentials.';
+      errorBox.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Sign In to Portal →';
+      return;
+    }
+
+    // Success -> redirect
+    window.location.href = data.redirectTo || '/dashboard';
+  } catch (err) {
+    errorBox.innerText = 'Network error. Please try again.';
+    errorBox.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.innerText = 'Sign In to Portal →';
+  }
+}
+</script>
+{% endblock %}

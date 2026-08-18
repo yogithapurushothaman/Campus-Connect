@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Institutional Registration — CampusConnect{% endblock %}
+
+{% block content %}
+<div style="max-width: 540px; width: 100%; margin: 30px auto;">
+  <div class="glass-card" style="padding: 32px;">
+    
+    <div style="text-align: center; margin-bottom: 24px;">
+      <div style="font-size: 2.5rem; margin-bottom: 8px;">🎓</div>
+      <h1 style="font-size: 1.5rem; font-weight: 800;">Create Institutional Account</h1>
+      <p style="color: var(--text-muted); font-size: 0.875rem;">Verified Access for College Students & Faculty</p>
+    </div>
+
+    <!-- Error Box -->
+    <div id="signupErrorBox" style="display: none; background: var(--danger-light); color: var(--danger); border: 1px solid #FECACA; padding: 10px 14px; border-radius: var(--radius-md); font-size: 0.85rem; margin-bottom: 16px;"></div>
+
+    <form id="signupForm" onsubmit="handleSignupSubmit(event)">
+      
+      <div class="form-group">
+        <label class="form-label">Full Name:</label>
+        <input type="text" id="signupNameInput" class="form-input" placeholder="e.g. Dr. Ramesh Kumar or Priya Roy" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Official College Email (@*.edu / @campus.edu):</label>
+        <input type="email" id="signupEmailInput" class="form-input" placeholder="e.g. priya.roy@campus.edu or prof.ramesh@college.edu" required>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Institutional Role:</label>
+          <select id="signupRoleSelect" class="form-select">
+            <option value="STUDENT">Student (Undergrad/Grad)</option>
+            <option value="FACULTY">Faculty / Staff Member</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Department:</label>
+          <select id="signupDeptSelect" class="form-select">
+            <option value="Computer Science & Engineering">Computer Science & Engg</option>
+            <option value="Electronics & Communication">Electronics & Comm</option>
+            <option value="Mechanical Engineering">Mechanical Engineering</option>
+            <option value="Management Studies">Management Studies</option>
+            <option value="Sciences & Humanities">Sciences & Humanities</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Designation / Title:</label>
+          <input type="text" id="signupDesigInput" class="form-input" placeholder="e.g. 3rd Year Student / Assistant Professor">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Student / Faculty ID:</label>
+          <input type="text" id="signupIdInput" class="form-input" placeholder="e.g. STU-2024-CS-099">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password:</label>
+        <input type="password" id="signupPasswordInput" class="form-input" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" id="signupSubmitBtn" class="btn btn-primary" style="width: 100%; margin-top: 8px;">
+        Register & Enter Portal →
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 20px; font-size: 0.85rem; color: var(--text-muted);">
+      Already have an account? <a href="/login" style="color: var(--primary); font-weight: 700; text-decoration: none;">Sign In here</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+async function handleSignupSubmit(e) {
+  e.preventDefault();
+  const name = document.getElementById('signupNameInput').value.trim();
+  const email = document.getElementById('signupEmailInput').value.trim();
+  const password = document.getElementById('signupPasswordInput').value;
+  const role = document.getElementById('signupRoleSelect').value;
+  const department = document.getElementById('signupDeptSelect').value;
+  const designation = document.getElementById('signupDesigInput').value.trim();
+  const studentOrFacultyId = document.getElementById('signupIdInput').value.trim();
+  
+  const errorBox = document.getElementById('signupErrorBox');
+  const submitBtn = document.getElementById('signupSubmitBtn');
+
+  errorBox.style.display = 'none';
+  submitBtn.disabled = true;
+  submitBtn.innerText = 'Creating account...';
+
+  try {
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        role,
+        department,
+        designation,
+        studentOrFacultyId
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      errorBox.innerText = data.error || 'Registration failed.';
+      errorBox.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Register & Enter Portal →';
+      return;
+    }
+
+    window.location.href = data.redirectTo || '/dashboard';
+  } catch (err) {
+    errorBox.innerText = 'Network error. Please try again.';
+    errorBox.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.innerText = 'Register & Enter Portal →';
+  }
+}
+</script>
+{% endblock %}

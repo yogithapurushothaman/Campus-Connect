@@ -1,0 +1,649 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — CampusConnect ({{ current_user.role }}){% endblock %}
+
+{% block content %}
+
+<!-- Hero Banner (Role-Tailored) -->
+{% if current_user.role in ['FACULTY', 'STAFF'] %}
+<div class="portal-hero hero-faculty">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.15); padding: 4px 12px; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 700; margin-bottom: 12px; letter-spacing: 0.05em;">
+        ⭐ FACULTY COMMAND CENTER & ADVISOR WORKBENCH
+      </div>
+      <h1 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 6px;">Welcome, {{ current_user.name }}</h1>
+      <p style="opacity: 0.9; font-size: 0.95rem;">
+        {{ current_user.designation }} • {{ current_user.department }} • ID: {{ current_user.student_or_faculty_id or 'FAC-CS-104' }}
+      </p>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <button onclick="openModal('createEventModal')" class="btn btn-primary">
+        ➕ Publish Official Event
+      </button>
+      <button onclick="switchMainTab('advisor')" class="btn btn-secondary">
+        📋 Advisor Workbench
+      </button>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="portal-hero hero-student">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.15); padding: 4px 12px; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 700; margin-bottom: 12px; letter-spacing: 0.05em;">
+        ✨ VERIFIED STUDENT PORTAL
+      </div>
+      <h1 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 6px;">Welcome back, {{ current_user.name }}!</h1>
+      <p style="opacity: 0.9; font-size: 0.95rem;">
+        {{ current_user.department }} • {{ current_user.student_or_faculty_id or 'STU-2024-CS-042' }} • ⚡ Karma: {{ current_user.karma_points }} pts • Reliability: {{ current_user.reliability_score }}%
+      </p>
+    </div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <button onclick="openModal('createActivityModal')" class="btn btn-secondary" style="color: var(--primary); font-weight: 700;">
+        ⚡ Launch Squad
+      </button>
+      <button onclick="openModal('submitComplaintModal')" class="btn btn-secondary">
+        🛡️ Report Campus Issue
+      </button>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- ========================================== -->
+<!-- VIEW 1: ACTIVITIES & SQUAD MATCHMAKER -->
+<!-- ========================================== -->
+<section id="view_activities" class="tab-view">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <h2 style="font-size: 1.35rem; font-weight: 800;">⚡ Campus Activities & Squad Matchmaker</h2>
+      <p style="color: var(--text-muted); font-size: 0.875rem;">Discover spontaneous study groups, sports matches, and hackathon teams.</p>
+    </div>
+    <button onclick="openModal('createActivityModal')" class="btn btn-primary btn-sm">
+      ➕ Create Squad Activity
+    </button>
+  </div>
+
+  <!-- Smart Matchmaker Recommendation Widget -->
+  <div class="glass-card" style="padding: 20px; margin-bottom: 24px; border-left: 4px solid var(--primary); background: linear-gradient(135deg, rgba(238, 242, 255, 0.7) 0%, #FFFFFF 100%);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+      <div>
+        <div style="font-size: 0.75rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 4px;">
+          🤖 AI Smart Matchmaker • Top Recommendation
+        </div>
+        <h3 style="font-size: 1.15rem; font-weight: 800;" id="aiRecTitle">Evening Football 5v5 Friendly Match</h3>
+        <p style="color: var(--text-muted); font-size: 0.875rem; margin: 4px 0 10px;" id="aiRecReason">
+          Matches your active sports profile and interest in Football • Squad almost ready to launch!
+        </p>
+      </div>
+      <div style="background: var(--primary); color: #fff; padding: 6px 14px; border-radius: var(--radius-full); font-weight: 800; font-size: 0.875rem;">
+        96% Match
+      </div>
+    </div>
+  </div>
+
+  <!-- Activities Feed Grid -->
+  <div class="grid-3" id="activitiesGrid">
+    {% for act in activities %}
+    <div class="glass-card" style="padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+          <span class="status-pill status-acknowledged" style="text-transform: uppercase;">{{ act.category }}</span>
+          <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">
+            👥 {{ act.participants|length }} / {{ act.max_participants }} Filled
+          </span>
+        </div>
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 8px;">{{ act.title }}</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px;">{{ act.description }}</p>
+        
+        <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;">
+          <div>📍 <strong>Venue:</strong> {{ act.location_name }}</div>
+          <div>⏰ <strong>Time:</strong> {{ act.date }} • {{ act.time }}</div>
+          <div>👤 <strong>Host:</strong> {{ act.creator_name }}</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 14px;">
+        <button onclick="joinSquad('{{ act.id }}')" class="btn btn-primary btn-sm" style="flex: 1;">
+          🤝 Join Squad
+        </button>
+        <button onclick="openSquadChat('{{ act.id }}', '{{ act.title }}')" class="btn btn-secondary btn-sm" title="Squad Chat">
+          💬 Chat
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ========================================== -->
+<!-- VIEW 2: EVENTS & OPPORTUNITIES HUB -->
+<!-- ========================================== -->
+<section id="view_events" class="tab-view" style="display: none;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <h2 style="font-size: 1.35rem; font-weight: 800;">📅 Official Events & Opportunities Hub</h2>
+      <p style="color: var(--text-muted); font-size: 0.875rem;">Verified workshops, hackathons, guest lectures, and placement drives.</p>
+    </div>
+    {% if current_user.role in ['FACULTY', 'STAFF'] %}
+    <button onclick="openModal('createEventModal')" class="btn btn-primary btn-sm">
+      ➕ Publish Event (Faculty)
+    </button>
+    {% endif %}
+  </div>
+
+  <div class="grid-3" id="eventsGrid">
+    {% for ev in events %}
+    <div class="glass-card" style="overflow: hidden; display: flex; flex-direction: column;">
+      <img src="{{ ev.banner_image }}" alt="Banner" style="width: 100%; height: 160px; object-fit: cover;">
+      <div style="padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span class="status-pill status-acknowledged">{{ ev.category }}</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">{{ ev.department }}</span>
+          </div>
+          <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 8px;">{{ ev.title }}</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 14px;">{{ ev.description }}</p>
+          
+          <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px;">
+            <div>📅 {{ ev.date }}</div>
+            <div>📍 {{ ev.location_name }}</div>
+            <div>👨‍🏫 Published by <strong>{{ ev.author.name if ev.author else 'Faculty' }}</strong></div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 14px;">
+          <button onclick="handleEventRSVP(this, '{{ ev.title }}')" class="btn btn-primary btn-sm" style="flex: 1;">
+            🎉 RSVP Now
+          </button>
+          <button onclick="showToast('Event Bookmarked', 'Added to your calendar list', 'info')" class="btn btn-secondary btn-sm">
+            🔖
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ========================================== -->
+<!-- VIEW 3: CLUBS & COMMUNITIES -->
+<!-- ========================================== -->
+<section id="view_clubs" class="tab-view" style="display: none;">
+  <div style="margin-bottom: 20px;">
+    <h2 style="font-size: 1.35rem; font-weight: 800;">👥 Student Clubs & Departmental Societies</h2>
+    <p style="color: var(--text-muted); font-size: 0.875rem;">Join clubs, check recruitment announcements, and connect with faculty advisors.</p>
+  </div>
+
+  <div class="grid-2" id="clubsGrid">
+    {% for club in clubs %}
+    <div class="glass-card" style="padding: 24px;">
+      <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 16px;">
+        <img src="{{ club.logo }}" alt="Logo" style="width: 56px; height: 56px; border-radius: var(--radius-md); object-fit: cover;">
+        <div>
+          <h3 style="font-size: 1.2rem; font-weight: 800;">{{ club.name }}</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem;">{{ club.tag_line }}</p>
+        </div>
+      </div>
+
+      <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 16px;">{{ club.description }}</p>
+
+      <div style="background: #F8FAFC; padding: 12px; border-radius: var(--radius-md); font-size: 0.8rem; margin-bottom: 16px;">
+        <div>👨‍🏫 <strong>Faculty Advisor:</strong> {{ club.faculty_advisor.name if club.faculty_advisor else 'Dr. Vikram Sen' }}</div>
+        <div>👤 <strong>Student Lead:</strong> {{ club.lead_name }}</div>
+        <div>📢 <strong>Open Recruitment:</strong> {{ club.recruitment_roles }} (Deadline: {{ club.recruitment_deadline }})</div>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <button onclick="openApplyModal('{{ club.id }}', '{{ club.name }}')" class="btn btn-primary btn-sm" style="flex: 1;">
+          ✍️ Apply for Core Team
+        </button>
+        {% if current_user.role in ['FACULTY', 'STAFF'] %}
+        <button onclick="switchMainTab('advisor')" class="btn btn-faculty btn-sm">
+          ⭐ Advisor Review
+        </button>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ========================================== -->
+<!-- VIEW 4: 2D CAMPUS MAP & WAYFINDING -->
+<!-- ========================================== -->
+<section id="view_map" class="tab-view" style="display: none;">
+  <div style="margin-bottom: 20px;">
+    <h2 style="font-size: 1.35rem; font-weight: 800;">🗺️ Interactive Campus Map & Wayfinding</h2>
+    <p style="color: var(--text-muted); font-size: 0.875rem;">Interactive 2D floorplan viewer with turn-by-turn walking directions and ETA.</p>
+  </div>
+
+  <div class="grid-2">
+    <!-- Map Canvas -->
+    <div class="glass-card" style="padding: 16px;">
+      <div class="map-canvas-container" id="canvasContainer">
+        <canvas id="campusMapCanvas" width="600" height="480" style="width: 100%; height: 100%; display: block;"></canvas>
+      </div>
+      <div style="margin-top: 10px; font-size: 0.75rem; color: var(--text-muted); text-align: center;">
+        💡 Click on any building node on the map to inspect details or calculate route
+      </div>
+    </div>
+
+    <!-- Wayfinding Controller Sheet -->
+    <div class="glass-card" style="padding: 24px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 16px;">🚶 Campus Route Navigator</h3>
+        
+        <div class="form-group">
+          <label class="form-label">Starting Point:</label>
+          <select id="routeStartSelect" class="form-select">
+            <option value="bld_hostel_b">Aryabhata Boys Residence Hall (HST-B1)</option>
+            <option value="bld_hostel_g">Kalpana Chawla Girls Residence Hall (HST-G1)</option>
+            <option value="bld_food_1">Student Center & Food Court (FC-01)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Destination Venue:</label>
+          <select id="routeDestSelect" class="form-select">
+            <option value="bld_eng_1">Alan Turing Computer Science Block (CS-01)</option>
+            <option value="bld_lib_1">Rabindranath Tagore Central Library (LIB-01)</option>
+            <option value="bld_sports_1">Major Dhyan Chand Sports Complex (SPT-01)</option>
+          </select>
+        </div>
+
+        <button onclick="calculateWalkingRoute()" class="btn btn-primary" style="width: 100%; margin-bottom: 16px;">
+          🧭 Compute Walking Route
+        </button>
+
+        <!-- Route Output Box -->
+        <div id="routeResultBox" style="display: none; background: #F8FAFC; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px;">
+          <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 0.95rem; margin-bottom: 8px;">
+            <span>🚶 Estimated Walk: <span id="routeMeters" style="color: var(--primary);">--</span>m</span>
+            <span>⏱️ <span id="routeETA" style="color: var(--primary);">--</span> mins</span>
+          </div>
+          <div id="routeStepsList" style="font-size: 0.8rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px;"></div>
+        </div>
+      </div>
+
+      <div style="font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 16px;">
+        📶 High-Speed Campus 6GHz Wi-Fi active across all academic spines.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================== -->
+<!-- VIEW 5: CAMPUS CARE COMPLAINTS -->
+<!-- ========================================== -->
+<section id="view_campuscare" class="tab-view" style="display: none;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+    <div>
+      <h2 style="font-size: 1.35rem; font-weight: 800;">🛡️ Campus Care Complaint Management</h2>
+      <p style="color: var(--text-muted); font-size: 0.875rem;">AI-triaged issue ticketing with transparent lifecycle tracking.</p>
+    </div>
+    <button onclick="openModal('submitComplaintModal')" class="btn btn-primary btn-sm">
+      ➕ Submit New Complaint
+    </button>
+  </div>
+
+  <div class="grid-2" id="complaintsGrid">
+    {% for cmp in complaints %}
+    <div class="glass-card" style="padding: 20px;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+        <span style="font-weight: 800; font-size: 0.85rem; color: var(--primary);">#{{ cmp.ticket_number }}</span>
+        <span class="status-pill status-{{ cmp.status }}">{{ cmp.status.replace('_', ' ') }}</span>
+      </div>
+      
+      <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 6px;">{{ cmp.title }}</h3>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">{{ cmp.description }}</p>
+
+      <div style="font-size: 0.8rem; color: var(--text-muted); background: #F8FAFC; padding: 10px; border-radius: var(--radius-sm); margin-bottom: 14px;">
+        <div>📍 <strong>Location:</strong> {{ cmp.building_name }} ({{ cmp.room_or_area }})</div>
+        <div>⚙️ <strong>Assigned Team:</strong> {{ cmp.assigned_team }}</div>
+        {% if cmp.admin_notes %}
+        <div style="color: var(--faculty-accent); margin-top: 4px;">💬 <strong>Advisor Note:</strong> {{ cmp.admin_notes }}</div>
+        {% endif %}
+      </div>
+
+      <!-- Lifecycle Progress Bar -->
+      <div style="display: flex; gap: 4px; margin-bottom: 14px;">
+        <div style="height: 6px; flex: 1; border-radius: var(--radius-full); background: var(--success);" title="Submitted"></div>
+        <div style="height: 6px; flex: 1; border-radius: var(--radius-full); background: {% if cmp.status in ['acknowledged', 'assigned', 'in_progress', 'resolved'] %}var(--success){% else %}#E2E8F0{% endif %};" title="Acknowledged"></div>
+        <div style="height: 6px; flex: 1; border-radius: var(--radius-full); background: {% if cmp.status in ['in_progress', 'resolved'] %}var(--success){% else %}#E2E8F0{% endif %};" title="In Progress"></div>
+        <div style="height: 6px; flex: 1; border-radius: var(--radius-full); background: {% if cmp.status == 'resolved' %}var(--success){% else %}#E2E8F0{% endif %};" title="Resolved"></div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <button onclick="upvoteTicket('{{ cmp.id }}', this)" class="btn btn-secondary btn-sm">
+          ▲ Upvote ({{ cmp.upvotes }})
+        </button>
+        <span style="font-size: 0.75rem; color: var(--text-subtle);">Auto-triaged by Campus AI</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ========================================== -->
+<!-- VIEW 6: FACULTY WORKBENCH (FACULTY ONLY) -->
+<!-- ========================================== -->
+{% if current_user.role in ['FACULTY', 'STAFF'] %}
+<section id="view_advisor" class="tab-view" style="display: none;">
+  <div style="margin-bottom: 24px;">
+    <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--faculty-accent);">⭐ Faculty Advisor Command Center</h2>
+    <p style="color: var(--text-muted); font-size: 0.875rem;">Approve club applicants, manage department announcements, and resolve campus care complaints.</p>
+  </div>
+
+  <div class="grid-2" style="margin-bottom: 24px;">
+    <!-- Club Advisor Approval Workbench -->
+    <div class="glass-card" style="padding: 24px;">
+      <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 16px;">📋 Student Club Applications Review</h3>
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: #F8FAFC; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-weight: 700; font-size: 0.95rem;">Ananya Sharma (STU-2024-CS-042)</span>
+            <span class="status-pill status-pending" id="applicantStatusBadge">Pending Review</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">
+            <strong>Applied Role:</strong> Full Stack Developer • <strong>Club:</strong> ACM Student Chapter
+          </p>
+          <p style="font-size: 0.85rem; color: var(--text-main); font-style: italic; margin-bottom: 12px;">
+            "I have built full-stack applications in Python and Next.js and would love to contribute to college portal open-source projects."
+          </p>
+          <div style="display: flex; gap: 8px;">
+            <button onclick="updateApplicantDecision('accepted')" class="btn btn-success btn-sm">
+              ✅ Grant Advisor Approval
+            </button>
+            <button onclick="updateApplicantDecision('shortlisted')" class="btn btn-secondary btn-sm">
+              ⏳ Shortlist
+            </button>
+            <button onclick="updateApplicantDecision('rejected')" class="btn btn-danger btn-sm">
+              ✕ Decline
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Campus Care Triage Workbench -->
+    <div class="glass-card" style="padding: 24px;">
+      <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 16px;">🛠️ Complaint Triage & Status Progression</h3>
+      <div style="background: #F8FAFC; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-weight: 700; font-size: 0.95rem;">Ticket #TKT-2026-8841</span>
+          <span class="status-pill status-in_progress" id="triageStatusBadge">In Progress</span>
+        </div>
+        <p style="font-size: 0.85rem; font-weight: 600; margin-bottom: 4px;">Wi-Fi Router Intermittent in CS Lab 304</p>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Alan Turing Block • Assigned to Campus IT & Network Operations</p>
+        
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label class="form-label" style="font-size: 0.75rem;">Faculty / Advisor Resolution Note:</label>
+          <input type="text" id="facultyTriageNote" class="form-input" placeholder="e.g. Inspected by network team, replaced switch." value="Replacement access point dispatched and tested.">
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button onclick="updateComplaintLifecycle('resolved')" class="btn btn-success btn-sm">
+            ✅ Mark Resolved
+          </button>
+          <button onclick="updateComplaintLifecycle('in_progress')" class="btn btn-secondary btn-sm">
+            ⚙️ In Progress
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- ========================================== -->
+<!-- VIEW 7: USER PROFILE -->
+<!-- ========================================== -->
+<section id="view_profile" class="tab-view" style="display: none;">
+  <div class="glass-card" style="padding: 28px; max-width: 680px; margin: 0 auto;">
+    <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 24px;">
+      <img src="{{ current_user.avatar }}" alt="Avatar" style="width: 80px; height: 80px; border-radius: var(--radius-full); object-fit: cover; border: 3px solid var(--primary);">
+      <div>
+        <h2 style="font-size: 1.4rem; font-weight: 800;">{{ current_user.name }}</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">{{ current_user.email }}</p>
+        <span class="status-pill status-acknowledged" style="margin-top: 6px;">
+          {% if current_user.role in ['FACULTY', 'STAFF'] %}Verified Faculty Advisor{% else %}Verified Student Member{% endif %}
+        </span>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;">
+      <div style="background: #F8FAFC; padding: 14px; border-radius: var(--radius-md);">
+        <div style="font-size: 0.75rem; color: var(--text-muted);">Department</div>
+        <div style="font-weight: 700;">{{ current_user.department }}</div>
+      </div>
+      <div style="background: #F8FAFC; padding: 14px; border-radius: var(--radius-md);">
+        <div style="font-size: 0.75rem; color: var(--text-muted);">Institutional ID</div>
+        <div style="font-weight: 700;">{{ current_user.student_or_faculty_id or 'CS-2024' }}</div>
+      </div>
+      <div style="background: #F8FAFC; padding: 14px; border-radius: var(--radius-md);">
+        <div style="font-size: 0.75rem; color: var(--text-muted);">Karma Reliability Score</div>
+        <div style="font-weight: 700; color: var(--success);">{{ current_user.reliability_score }}% (Excellent)</div>
+      </div>
+      <div style="background: #F8FAFC; padding: 14px; border-radius: var(--radius-md);">
+        <div style="font-size: 0.75rem; color: var(--text-muted);">Karma Points</div>
+        <div style="font-weight: 700; color: var(--primary);">{{ current_user.karma_points }} pts</div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 12px;">
+      <button onclick="showToast('Profile Updated', 'Privacy preferences saved successfully', 'success')" class="btn btn-primary" style="flex: 1;">
+        Save Preferences
+      </button>
+      <a href="/api/auth/logout" class="btn btn-danger">
+        Logout Session
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block modals %}
+<!-- Modal: Create Official Event (Faculty) -->
+<div class="modal-overlay" id="createEventModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="font-weight: 800; font-size: 1.15rem;">➕ Publish Official Campus Event</h3>
+      <button onclick="closeModal('createEventModal')" style="background: none; border: none; cursor: pointer; font-size: 1.2rem;">✕</button>
+    </div>
+    <form id="createEventForm" onsubmit="submitEventForm(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Event Title:</label>
+          <input type="text" id="eventTitleInput" class="form-input" placeholder="e.g. AI & Robotics Symposium 2026" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description:</label>
+          <textarea id="eventDescInput" class="form-textarea" rows="3" placeholder="Provide details, eligibility, schedule..." required></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Date & Time:</label>
+            <input type="text" id="eventDateInput" class="form-input" placeholder="e.g. Nov 15, 2026 • 10:00 AM" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category:</label>
+            <select id="eventCatInput" class="form-select">
+              <option value="Workshop">Workshop</option>
+              <option value="Hackathon">Hackathon</option>
+              <option value="Placement Drive">Placement Drive</option>
+              <option value="Cultural Fest">Cultural Fest</option>
+              <option value="Seminar">Seminar</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location Venue:</label>
+          <input type="text" id="eventLocationInput" class="form-input" placeholder="e.g. Alan Turing Block Main Auditorium" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick="closeModal('createEventModal')" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Publish to Campus</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Launch Squad Activity (Student) -->
+<div class="modal-overlay" id="createActivityModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="font-weight: 800; font-size: 1.15rem;">⚡ Launch Activity Squad</h3>
+      <button onclick="closeModal('createActivityModal')" style="background: none; border: none; cursor: pointer; font-size: 1.2rem;">✕</button>
+    </div>
+    <form id="createActivityForm" onsubmit="submitActivityForm(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Activity Title:</label>
+          <input type="text" id="actTitleInput" class="form-input" placeholder="e.g. Badminton 2v2 Doubles" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description:</label>
+          <textarea id="actDescInput" class="form-textarea" rows="2" placeholder="Describe the activity..." required></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Category:</label>
+            <select id="actCatInput" class="form-select">
+              <option value="sports">Sports</option>
+              <option value="study">Study Group</option>
+              <option value="hackathon">Hackathon</option>
+              <option value="gaming">Gaming</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Participants:</label>
+            <input type="number" id="actMaxParticipants" class="form-input" value="6" min="2" max="20" required>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Time:</label>
+            <input type="text" id="actTimeInput" class="form-input" placeholder="e.g. Today 06:30 PM" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Venue:</label>
+            <input type="text" id="actLocationInput" class="form-input" placeholder="e.g. Sports Complex Court 2" required>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick="closeModal('createActivityModal')" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Launch Squad</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Submit Campus Care Complaint (with AI Triage Preview) -->
+<div class="modal-overlay" id="submitComplaintModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="font-weight: 800; font-size: 1.15rem;">🛡️ Submit Campus Care Issue</h3>
+      <button onclick="closeModal('submitComplaintModal')" style="background: none; border: none; cursor: pointer; font-size: 1.2rem;">✕</button>
+    </div>
+    <form id="submitComplaintForm" onsubmit="submitComplaintForm(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Issue Title:</label>
+          <input type="text" id="cmpTitleInput" class="form-input" placeholder="e.g. Wi-Fi router disconnection in Turing Lab 202" oninput="runLiveAITriagePreview()" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Building / Location:</label>
+          <select id="cmpBuildingSelect" class="form-select" onchange="runLiveAITriagePreview()">
+            <option value="bld_eng_1">Alan Turing Computer Science Block</option>
+            <option value="bld_lib_1">Central Library</option>
+            <option value="bld_sports_1">Sports Complex</option>
+            <option value="bld_hostel_b">Aryabhata Boys Hostel</option>
+            <option value="bld_hostel_g">Kalpana Chawla Girls Hostel</option>
+            <option value="bld_food_1">Student Center Food Court</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Room / Specific Area:</label>
+          <input type="text" id="cmpRoomInput" class="form-input" placeholder="e.g. Room 202 (2nd Floor)" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description:</label>
+          <textarea id="cmpDescInput" class="form-textarea" rows="3" placeholder="Provide accurate details..." oninput="runLiveAITriagePreview()" required></textarea>
+        </div>
+
+        <!-- Live AI Triage Box -->
+        <div id="aiTriagePreviewBox" style="background: #EEF2FF; border: 1px solid #C7D2FE; border-radius: var(--radius-md); padding: 12px; font-size: 0.8rem; margin-top: 10px;">
+          <div style="font-weight: 700; color: var(--primary); margin-bottom: 4px;">🤖 AI Auto-Triage Prediction:</div>
+          <div>Predicted Category: <strong id="predCategory">wifi</strong> • Priority: <strong id="predPriority" style="color: var(--danger);">high</strong></div>
+          <div>Auto-Routing to: <strong id="predTeam">Campus IT & Network Operations</strong> (94% confidence)</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick="closeModal('submitComplaintModal')" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Submit Ticket</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Apply to Club (Student) -->
+<div class="modal-overlay" id="applyClubModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="font-weight: 800; font-size: 1.15rem;" id="applyClubModalTitle">✍️ Apply to Club</h3>
+      <button onclick="closeModal('applyClubModal')" style="background: none; border: none; cursor: pointer; font-size: 1.2rem;">✕</button>
+    </div>
+    <form id="applyClubForm" onsubmit="submitClubApplication(event)">
+      <input type="hidden" id="applyClubIdInput">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Role Applying For:</label>
+          <input type="text" id="applyRoleInput" class="form-input" placeholder="e.g. Core Developer, Event Lead, UI Designer" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Statement of Interest / Why Join?:</label>
+          <textarea id="applyWhyInput" class="form-textarea" rows="3" placeholder="Share your experience, motivation, and portfolio..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Portfolio / GitHub / LinkedIn URL (Optional):</label>
+          <input type="url" id="applyPortfolioInput" class="form-input" placeholder="https://github.com/your-profile">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" onclick="closeModal('applyClubModal')" class="btn btn-secondary">Cancel</button>
+        <button type="submit" class="btn btn-primary">Submit Application</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Interactive Squad Live Chat -->
+<div class="modal-overlay" id="squadChatModal">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <div>
+        <h3 style="font-weight: 800; font-size: 1.1rem;" id="squadChatTitle">💬 Squad Live Chat</h3>
+        <span style="font-size: 0.75rem; color: var(--success); font-weight: 600;">🟢 Online • 3 Participants</span>
+      </div>
+      <button onclick="closeModal('squadChatModal')" style="background: none; border: none; cursor: pointer; font-size: 1.2rem;">✕</button>
+    </div>
+    <div class="modal-body" style="height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;" id="squadChatMessages">
+      <div style="background: #F1F5F9; padding: 8px 12px; border-radius: var(--radius-md); font-size: 0.85rem; align-self: flex-start; max-width: 80%;">
+        <strong>Dr. Vikram:</strong> Welcome everyone! Feel free to coordinate logistics here.
+      </div>
+      <div style="background: var(--primary-light); color: var(--primary); padding: 8px 12px; border-radius: var(--radius-md); font-size: 0.85rem; align-self: flex-end; max-width: 80%;">
+        <strong>Ananya:</strong> Heading to the venue now with equipment!
+      </div>
+    </div>
+    <div style="padding: 12px 20px; border-top: 1px solid var(--border-color); display: flex; gap: 8px;">
+      <input type="text" id="squadMsgInput" class="form-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendSquadMessage()">
+      <button onclick="sendSquadMessage()" class="btn btn-primary btn-sm">Send</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

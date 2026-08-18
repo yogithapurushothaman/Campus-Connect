@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CampusConnect — Digital Campus Ecosystem{% endblock %}</title>
+  
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="/static/css/styles.css">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Emergency Broadcast Banner -->
+  <div class="emergency-banner" id="emergencyBanner">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 1.1rem;">⚠️</span>
+      <div>
+        <strong>CAMPUS ADVISORY:</strong> Heavy rain expected 04:00 PM – 08:00 PM. Indoor facilities open. Helplines active.
+      </div>
+    </div>
+    <button onclick="document.getElementById('emergencyBanner').style.display='none'" style="background: none; border: none; color: #fff; cursor: pointer; font-size: 1.1rem; opacity: 0.8;">✕</button>
+  </div>
+
+  <!-- Main Top Navigation -->
+  <header class="navbar">
+    <a href="/dashboard" class="brand-logo">
+      <span style="font-size: 1.4rem;">🎓</span>
+      <span>Campus<span style="color: var(--primary);">Connect</span></span>
+      {% if current_user %}
+        {% if current_user.role in ['FACULTY', 'STAFF'] %}
+          <span class="brand-badge badge-faculty">Faculty Portal</span>
+        {% else %}
+          <span class="brand-badge badge-student">Student Portal</span>
+        {% endif %}
+      {% endif %}
+    </a>
+
+    {% if current_user %}
+    <!-- Dynamic Role-Aware Nav Tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-tab-btn active" onclick="switchMainTab('activities')" id="tabBtn_activities">
+        ⚡ Activities
+      </button>
+      <button class="nav-tab-btn" onclick="switchMainTab('events')" id="tabBtn_events">
+        📅 Events & Hub
+      </button>
+      <button class="nav-tab-btn" onclick="switchMainTab('clubs')" id="tabBtn_clubs">
+        👥 Clubs
+      </button>
+      <button class="nav-tab-btn" onclick="switchMainTab('map')" id="tabBtn_map">
+        🗺️ Campus Map
+      </button>
+      <button class="nav-tab-btn" onclick="switchMainTab('campuscare')" id="tabBtn_campuscare">
+        🛡️ Campus Care
+      </button>
+      {% if current_user.role in ['FACULTY', 'STAFF'] %}
+      <button class="nav-tab-btn" onclick="switchMainTab('advisor')" id="tabBtn_advisor" style="color: var(--faculty-accent); font-weight: 700;">
+        ⭐ Faculty Workbench
+      </button>
+      {% endif %}
+      <button class="nav-tab-btn" onclick="switchMainTab('profile')" id="tabBtn_profile">
+        👤 Profile
+      </button>
+    </nav>
+
+    <!-- User Menu -->
+    <div class="user-menu">
+      <img src="{{ current_user.avatar }}" alt="Avatar" class="user-avatar">
+      <div style="text-align: right; display: none; @media(min-width: 768px){display: block;}">
+        <div style="font-weight: 700; font-size: 0.875rem;">{{ current_user.name }}</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ current_user.designation }}</div>
+      </div>
+      <a href="/api/auth/logout" class="btn btn-secondary btn-sm" title="Log out">
+        🚪 Logout
+      </a>
+    </div>
+    {% else %}
+    <div style="display: flex; gap: 10px;">
+      <a href="/login" class="btn btn-secondary btn-sm">Login</a>
+      <a href="/signup" class="btn btn-primary btn-sm">Register</a>
+    </div>
+    {% endif %}
+  </header>
+
+  <!-- Dynamic Content Stage -->
+  <main class="main-container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Interactive Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Shared Modals Container -->
+  {% block modals %}{% endblock %}
+
+  <!-- Core Interactive Client Scripts -->
+  <script src="/static/js/app.js"></script>
+  <script src="/static/js/map.js"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
