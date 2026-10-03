@@ -5,6 +5,7 @@ import { FacultyKanbanBoard } from '../components/FacultyKanbanBoard';
 import { AdminHeatmap } from '../components/AdminHeatmap';
 import { FloatingNexus3D } from '../components/FloatingNexus3D';
 import { SegmentedToggle } from '../components/SegmentedToggle';
+import { EventAnalyticsModal } from '../components/EventAnalyticsModal';
 import {
   Briefcase,
   Plus,
@@ -17,7 +18,13 @@ import {
   Send,
   Users,
   ShieldAlert,
-  MapPin
+  MapPin,
+  FileSpreadsheet,
+  BarChart2,
+  Download,
+  UserCheck,
+  PieChart,
+  Tag
 } from 'lucide-react';
 
 export const FacultyDashboard = () => {
@@ -29,6 +36,7 @@ export const FacultyDashboard = () => {
   const [clubs, setClubs] = useState([]);
   const [complaints, setComplaints] = useState([]);
   const [reports, setReports] = useState([]);
+  const [selectedEventForAnalytics, setSelectedEventForAnalytics] = useState(null);
 
   // New Event Form State
   const [evTitle, setEvTitle] = useState('');
@@ -36,6 +44,7 @@ export const FacultyDashboard = () => {
   const [evDate, setEvDate] = useState('Dec 15, 2026 • 10:00 AM');
   const [evCategory, setEvCategory] = useState('Workshop');
   const [evLocation, setEvLocation] = useState('Alan Turing Computer Science Block');
+  const [evCapacity, setEvCapacity] = useState(150);
 
   // New Notice Form State
   const [noticeTitle, setNoticeTitle] = useState('');
@@ -151,6 +160,7 @@ export const FacultyDashboard = () => {
           category: evCategory,
           venue: evLocation,
           locationName: evLocation,
+          capacity: evCapacity,
         }),
       });
 
@@ -166,6 +176,29 @@ export const FacultyDashboard = () => {
       }
     } catch (e) {
       showToast('Error publishing event.');
+    }
+  };
+
+  const handleExportEventCSV = async (eventId, e) => {
+    if (e) e.stopPropagation();
+    try {
+      const res = await authFetch(`/api/faculty/events/${eventId}/export`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `event_roster_${eventId.slice(0, 8)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        showToast('📄 Registration CSV Roster downloaded!');
+      } else {
+        showToast('Failed to export CSV roster.');
+      }
+    } catch (err) {
+      showToast('Error downloading CSV export.');
     }
   };
 
@@ -420,13 +453,171 @@ export const FacultyDashboard = () => {
           </section>
         )}
 
-        {/* TAB 3: CREATE EVENT */}
+        {/* TAB 3: MANAGE EVENTS & REGISTRATION TRACKING */}
         {activeTab === 'events' && (
-          <section style={{ maxWidth: '600px', margin: '0 auto' }}>
-            <div className="glass-card" style={{ padding: '24px' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Calendar size={18} style={{ color: 'var(--faculty-accent)' }} />
-                <span>Create Official Campus Event</span>
+          <section style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            
+            {/* MANAGE EVENTS DASHBOARD GRID */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Calendar size={22} style={{ color: 'var(--primary-purple)' }} />
+                    <span>Manage Events & Registration Analytics</span>
+                  </h3>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
+                    Track live student registrations, view department breakdown analytics, and download official attendance rosters.
+                  </p>
+                </div>
+              </div>
+
+              {events.length === 0 ? (
+                <div className="glass-card" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  No campus events created yet. Use the form below to publish an official event.
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
+                  {events.map((ev) => {
+                    const regCount = ev.registration_count ?? ev.registrationCount ?? ev.rsvpsCount ?? 0;
+                    const cap = ev.capacity || 150;
+                    const pct = Math.min(Math.round((regCount / cap) * 100), 100);
+
+                    return (
+                      <div
+                        key={ev.id}
+                        className="glass-card shadow-sm"
+                        style={{
+                          padding: '20px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          gap: '16px',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: '16px',
+                          background: 'linear-gradient(135deg, #FFFFFF 0%, #FAF8F5 100%)',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          transition: 'transform 0.2s ease, boxShadow 0.2s ease'
+                        }}
+                      >
+                        {/* Event Category & Title */}
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '10px' }}>
+                            <span
+                              style={{
+                                background: 'rgba(139, 92, 246, 0.12)',
+                                color: 'var(--primary-purple)',
+                                padding: '4px 10px',
+                                borderRadius: '10px',
+                                fontSize: '0.75rem',
+                                fontWeight: '700',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.04em'
+                              }}
+                            >
+                              {ev.category || 'Official Event'}
+                            </span>
+                            <span style={{ fontSize: '0.78rem', color: 'var(--text-subtle)', fontWeight: '500' }}>
+                              {ev.date}
+                            </span>
+                          </div>
+
+                          <h4 style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-main)', margin: '0 0 6px 0', lineHeight: 1.35 }}>
+                            {ev.title}
+                          </h4>
+                          
+                          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            {ev.description}
+                          </p>
+                        </div>
+
+                        {/* PROMINENT "Total Registered: X / Y (Capacity)" BADGE & PROGRESS BAR */}
+                        <div
+                          style={{
+                            background: 'rgba(139, 92, 246, 0.06)',
+                            border: '1px solid rgba(139, 92, 246, 0.18)',
+                            borderRadius: '12px',
+                            padding: '12px 14px',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => setSelectedEventForAnalytics(ev)}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                            <span style={{ fontSize: '0.82rem', fontWeight: '800', color: 'var(--primary-purple)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <UserCheck size={16} />
+                              Total Registered: {regCount} / {cap} (Capacity)
+                            </span>
+                            <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-subtle)' }}>
+                              {pct}%
+                            </span>
+                          </div>
+
+                          {/* Mini Occupancy Bar */}
+                          <div style={{ height: '6px', width: '100%', backgroundColor: 'rgba(139, 92, 246, 0.15)', borderRadius: '999px', overflow: 'hidden' }}>
+                            <div
+                              style={{
+                                width: `${pct}%`,
+                                height: '100%',
+                                backgroundColor: 'var(--primary-purple)',
+                                borderRadius: '999px',
+                                transition: 'width 0.4s ease'
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Card Action Buttons */}
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                          <button
+                            onClick={() => setSelectedEventForAnalytics(ev)}
+                            className="btn btn-primary btn-sm"
+                            style={{
+                              flex: 1,
+                              background: 'var(--primary-purple)',
+                              fontWeight: '700',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px',
+                              padding: '8px 14px',
+                              borderRadius: '10px',
+                              boxShadow: '0 4px 12px rgba(139,92,246,0.25)'
+                            }}
+                          >
+                            <BarChart2 size={15} />
+                            <span>View Analytics & Roster</span>
+                          </button>
+
+                          <button
+                            onClick={(e) => handleExportEventCSV(ev.id, e)}
+                            className="btn btn-secondary btn-sm"
+                            title="Download CSV Roster"
+                            style={{
+                              padding: '8px 12px',
+                              borderRadius: '10px',
+                              fontWeight: '700',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              border: '1px solid var(--border-color)'
+                            }}
+                          >
+                            <FileSpreadsheet size={15} style={{ color: 'var(--primary-purple)' }} />
+                            <span>CSV</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* CREATE NEW EVENT FORM */}
+            <div className="glass-card" style={{ maxWidth: '640px', margin: '0 auto', width: '100%', padding: '24px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Plus size={18} style={{ color: 'var(--faculty-accent)' }} />
+                <span>Publish New Official Campus Event</span>
               </h3>
               <form onSubmit={handleCreateEvent}>
                 <div className="form-group">
@@ -440,14 +631,28 @@ export const FacultyDashboard = () => {
                     required
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Category:</label>
-                  <select value={evCategory} onChange={(e) => setEvCategory(e.target.value)} className="form-select">
-                    <option value="Hackathon">Hackathon</option>
-                    <option value="Workshop">Workshop</option>
-                    <option value="Seminar">Seminar</option>
-                    <option value="Cultural Fest">Cultural Fest</option>
-                  </select>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <div className="form-group">
+                    <label className="form-label">Category:</label>
+                    <select value={evCategory} onChange={(e) => setEvCategory(e.target.value)} className="form-select">
+                      <option value="Hackathon">Hackathon</option>
+                      <option value="Workshop">Workshop</option>
+                      <option value="Seminar">Seminar</option>
+                      <option value="Cultural Fest">Cultural Fest</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Max Student Capacity:</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={evCapacity}
+                      onChange={(e) => setEvCapacity(e.target.value)}
+                      min="10"
+                      max="10000"
+                      required
+                    />
+                  </div>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Date & Time:</label>
@@ -481,7 +686,7 @@ export const FacultyDashboard = () => {
                   />
                 </div>
                 <button type="submit" className="btn btn-faculty" style={{ width: '100%', marginTop: '8px' }}>
-                  Publish Event
+                  Publish Official Event
                 </button>
               </form>
             </div>
@@ -579,6 +784,14 @@ export const FacultyDashboard = () => {
           <div style={{ position: 'fixed', bottom: 24, right: 24, background: '#1E202A', color: '#fff', padding: '12px 20px', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', zIndex: 100 }}>
             {toastMsg}
           </div>
+        )}
+
+        {/* Event Analytics Modal */}
+        {selectedEventForAnalytics && (
+          <EventAnalyticsModal
+            event={selectedEventForAnalytics}
+            onClose={() => setSelectedEventForAnalytics(null)}
+          />
         )}
 
         </div>

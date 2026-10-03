@@ -76,6 +76,7 @@ class Event(Base):
     location_name = Column(String(100), default="Main Campus")
     venue = Column(String(100), default="Main Campus")
     department = Column(String(100), default="General")
+    capacity = Column(Integer, default=150)
     banner_image = Column(String(255), default="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80")
     is_official = Column(Boolean, default=True)
     author_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
@@ -84,8 +85,10 @@ class Event(Base):
 
     # Relationships
     author = relationship("User", back_populates="events")
+    registrations = relationship("EventRegistration", back_populates="event", cascade="all, delete-orphan")
 
     def to_dict(self):
+        reg_count = len(self.registrations) if hasattr(self, 'registrations') and self.registrations else 0
         return {
             "id": self.id,
             "title": self.title,
@@ -95,6 +98,8 @@ class Event(Base):
             "locationName": self.location_name,
             "venue": self.venue,
             "department": self.department,
+            "capacity": self.capacity or 150,
+            "registrationCount": reg_count,
             "bannerImage": self.banner_image,
             "isOfficial": self.is_official,
             "authorId": self.author_id,
@@ -106,6 +111,33 @@ class Event(Base):
                 "department": self.author.department,
             } if self.author else None,
             "createdAt": self.created_at.isoformat() if self.created_at else None,
+        }
+
+class EventRegistration(Base):
+    __tablename__ = "event_registrations"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    event_id = Column(String(36), ForeignKey("events.id", ondelete="CASCADE"), nullable=False)
+    student_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    registered_at = Column(DateTime, default=utc_now)
+
+    # Relationships
+    event = relationship("Event", back_populates="registrations")
+    student = relationship("User", foreign_keys=[student_id])
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "eventId": self.event_id,
+            "studentId": self.student_id,
+            "registeredAt": self.registered_at.isoformat() if self.registered_at else None,
+            "student": {
+                "id": self.student.id,
+                "name": self.student.name,
+                "email": self.student.email,
+                "department": self.student.department or "Computer Science & Engineering",
+                "registerNumber": self.student.student_or_faculty_id or "RA2111003010042"
+            } if self.student else None
         }
 
 class Club(Base):

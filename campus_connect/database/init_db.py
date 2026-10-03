@@ -18,6 +18,13 @@ def init_database():
     except Exception:
         session.rollback()
 
+    try:
+        from sqlalchemy import text
+        session.execute(text("ALTER TABLE events ADD COLUMN capacity INTEGER DEFAULT 150"))
+        session.commit()
+    except Exception:
+        session.rollback()
+
     # Check if data already seeded
     existing_faculty = session.query(User).filter_by(email="prof.vikram@college.edu").first()
     if existing_faculty:
@@ -72,6 +79,7 @@ def init_database():
         category="Hackathon",
         location_name="Alan Turing Computer Science Block - Main Auditorium",
         department="Computer Science & Engineering",
+        capacity=200,
         banner_image="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&auto=format&fit=crop&q=80",
         is_official=True,
         author_id=faculty_user.id,
@@ -83,6 +91,7 @@ def init_database():
         category="Workshop",
         location_name="Central Library Digital Sandbox Room 204",
         department="Computer Science & Engineering",
+        capacity=100,
         banner_image="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&auto=format&fit=crop&q=80",
         is_official=True,
         author_id=faculty_user.id,
@@ -94,11 +103,36 @@ def init_database():
         category="Cultural Fest",
         location_name="Major Dhyan Chand Sports Complex Arena",
         department="Student Affairs",
+        capacity=500,
         banner_image="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80",
         is_official=True,
         author_id=faculty_user.id,
     )
     session.add_all([event1, event2, event3])
+    session.flush()
+
+    # Create additional sample student accounts for rich registration analytics
+    from campus_connect.database.models import EventRegistration
+    extra_students = [
+        User(name="Rohan Verma", email="rohan@campus.edu", password=hash_password("password123"), role="STUDENT", department="Electronics & Communication", student_or_faculty_id="STU-2024-EC-102", is_verified=True),
+        User(name="Priya Patel", email="priya@campus.edu", password=hash_password("password123"), role="STUDENT", department="Information Technology", student_or_faculty_id="STU-2024-IT-055", is_verified=True),
+        User(name="Vikram Malhotra", email="vikram.m@campus.edu", password=hash_password("password123"), role="STUDENT", department="Mechanical Engineering", student_or_faculty_id="STU-2024-ME-089", is_verified=True),
+        User(name="Sneha Reddy", email="sneha@campus.edu", password=hash_password("password123"), role="STUDENT", department="Computer Science & Engineering", student_or_faculty_id="STU-2024-CS-112", is_verified=True),
+        User(name="Kavya Nair", email="kavya@campus.edu", password=hash_password("password123"), role="STUDENT", department="Electronics & Communication", student_or_faculty_id="STU-2024-EC-204", is_verified=True),
+        User(name="Amit Kumar", email="amit@campus.edu", password=hash_password("password123"), role="STUDENT", department="Electrical Engineering", student_or_faculty_id="STU-2024-EE-071", is_verified=True),
+    ]
+    session.add_all(extra_students)
+    session.flush()
+
+    # Seed Event Registrations
+    all_seeded_students = [student_user] + extra_students
+    for index, student in enumerate(all_seeded_students):
+        # Register for event 1
+        session.add(EventRegistration(event_id=event1.id, student_id=student.id))
+        if index % 2 == 0:
+            session.add(EventRegistration(event_id=event2.id, student_id=student.id))
+        if index % 3 == 0:
+            session.add(EventRegistration(event_id=event3.id, student_id=student.id))
 
     # 4. Create Clubs & Communities
     club1 = Club(
