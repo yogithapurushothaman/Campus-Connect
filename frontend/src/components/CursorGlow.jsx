@@ -1,36 +1,28 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 
 export const CursorGlow = () => {
-  const glowRef = useRef(null);
+  const [pos, setPos] = useState({ x: -1000, y: -1000 });
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const el = glowRef.current;
-    if (!el) return;
-
-    let requestID;
+    let animationFrameId;
 
     const handleMouseMove = (e) => {
-      cancelAnimationFrame(requestID);
-      requestID = requestAnimationFrame(() => {
-        if (el) {
-          el.style.setProperty('--mouse-x', `${e.clientX}px`);
-          el.style.setProperty('--mouse-y', `${e.clientY}px`);
-          el.style.opacity = '1';
-        }
+      animationFrameId = requestAnimationFrame(() => {
+        setPos({ x: e.clientX, y: e.clientY });
+        setVisible(true);
       });
     };
 
     const handleMouseLeave = () => {
-      if (el) {
-        el.style.opacity = '0';
-      }
+      setVisible(false);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
     document.body.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
-      cancelAnimationFrame(requestID);
+      cancelAnimationFrame(animationFrameId);
       window.removeEventListener('mousemove', handleMouseMove);
       document.body.removeEventListener('mouseleave', handleMouseLeave);
     };
@@ -38,15 +30,21 @@ export const CursorGlow = () => {
 
   return (
     <div
-      ref={glowRef}
       style={{
         position: 'fixed',
-        inset: 0,
+        top: 0,
+        left: 0,
+        width: '280px',
+        height: '280px',
+        borderRadius: '50%',
         pointerEvents: 'none',
         zIndex: 9999,
-        background: 'radial-gradient(250px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px), rgba(233, 213, 255, 0.35), rgba(192, 132, 252, 0.12) 40%, transparent 80%)',
-        opacity: 0,
-        transition: 'opacity 0.4s ease',
+        transform: `translate3d(${pos.x - 140}px, ${pos.y - 140}px, 0)`,
+        background: 'radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, rgba(139, 92, 246, 0.08) 45%, transparent 75%)',
+        opacity: visible ? 1 : 0,
+        transition: 'opacity 0.25s ease',
+        filter: 'blur(16px)',
+        mixBlendMode: 'screen',
       }}
     />
   );
