@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { MasterAppShell } from '../components/MasterAppShell';
 import { FacultyKanbanBoard } from '../components/FacultyKanbanBoard';
 import { AdminHeatmap } from '../components/AdminHeatmap';
+import { FloatingNexus3D } from '../components/FloatingNexus3D';
+import { SegmentedToggle } from '../components/SegmentedToggle';
 import {
   Briefcase,
   Plus,
@@ -21,6 +23,7 @@ import {
 export const FacultyDashboard = () => {
   const { user, authFetch } = useAuth();
   const [activeTab, setActiveTab] = useState('complaints');
+  const [viewToggle, setViewToggle] = useState('overview');
 
   const [events, setEvents] = useState([]);
   const [clubs, setClubs] = useState([]);
@@ -192,71 +195,78 @@ export const FacultyDashboard = () => {
     <MasterAppShell activeNav={activeTab} onNavChange={setActiveTab}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
-        {/* Faculty Command Center Banner */}
-        <div className="portal-hero hero-faculty">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-            <div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.15)', padding: '4px 12px', borderRadius: 'var(--radius-full)', fontSize: '0.75rem', fontWeight: '700', marginBottom: '10px' }}>
-                <ShieldCheck size={14} />
-                <span>FACULTY COMMAND CENTER • RBAC AUTHORIZED</span>
-              </div>
-              <h1 style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '4px' }}>
-                Welcome, {user?.name || 'Faculty Member'}
-              </h1>
-              <p style={{ opacity: 0.9, fontSize: '0.9rem' }}>
-                {user?.designation} • {user?.department} • ID: {user?.studentOrFacultyId || 'FAC-CS-104'}
-              </p>
+        {/* TOP AGENCY HERO SECTION */}
+        <div style={{ position: 'relative', minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0 20px 0' }}>
+          <div style={{ maxWidth: '650px', zIndex: 2 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'var(--primary-light)', color: 'var(--primary-purple)', padding: '6px 14px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '14px', border: '1px solid var(--border-color)' }}>
+              <ShieldCheck size={14} />
+              <span>FACULTY COMMAND CENTER • RBAC AUTHORIZED</span>
             </div>
+            
+            <h1 style={{ fontSize: '2.4rem', fontWeight: '800', color: 'var(--text-main)', letterSpacing: '-0.02em', lineHeight: '1.15', margin: '0 0 12px 0', textTransform: 'uppercase' }}>
+              FACULTY HUB.<br />
+              <span style={{ color: 'var(--primary-purple)' }}>FULLY UNIFIED.</span>
+            </h1>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setActiveTab('events')} className="btn btn-secondary btn-sm" style={{ color: 'var(--faculty-accent)', fontWeight: '700' }}>
-                <Plus size={16} />
-                <span>Publish Official Event</span>
-              </button>
-            </div>
+            <p style={{ fontSize: '0.975rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: '0 0 20px 0', fontWeight: '500' }}>
+              Welcome back, {user?.name || 'Faculty Member'}. Triage student issues on Kanban, publish official campus events, broadcast notices, and review moderation queue in real time.
+            </p>
+
+            <SegmentedToggle
+              value={viewToggle}
+              onChange={setViewToggle}
+              options={[
+                { id: 'overview', label: 'Overview' },
+                { id: 'feed', label: 'Faculty Feed' }
+              ]}
+            />
+          </div>
+
+          <div style={{ position: 'relative', width: '380px', height: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <FloatingNexus3D height="240px" />
           </div>
         </div>
 
-        {/* Navigation Tabs */}
+        {/* SUB NAVIGATION CONTROLS */}
         <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
           <button
             onClick={() => setActiveTab('complaints')}
-            className={`btn btn-sm ${activeTab === 'complaints' ? 'btn-faculty' : 'btn-secondary'}`}
+            className={`btn btn-sm ${activeTab === 'complaints' ? 'btn-primary' : 'btn-secondary'}`}
           >
             <ShieldAlert size={16} />
             <span>Campus Care</span>
           </button>
           <button
             onClick={() => setActiveTab('notices')}
-            className={`btn btn-sm ${activeTab === 'notices' ? 'btn-faculty' : 'btn-secondary'}`}
+            className={`btn btn-sm ${activeTab === 'notices' ? 'btn-primary' : 'btn-secondary'}`}
           >
             <Send size={16} />
             <span>Post Notice</span>
           </button>
           <button
             onClick={() => setActiveTab('events')}
-            className={`btn btn-sm ${activeTab === 'events' ? 'btn-faculty' : 'btn-secondary'}`}
+            className={`btn btn-sm ${activeTab === 'events' ? 'btn-primary' : 'btn-secondary'}`}
           >
             <Calendar size={16} />
             <span>Create Event</span>
           </button>
           <button
             onClick={() => setActiveTab('clubs')}
-            className={`btn btn-sm ${activeTab === 'clubs' ? 'btn-faculty' : 'btn-secondary'}`}
+            className={`btn btn-sm ${activeTab === 'clubs' ? 'btn-primary' : 'btn-secondary'}`}
           >
             <Briefcase size={16} />
             <span>Club Advisor Workbench</span>
           </button>
           <button
             onClick={() => setActiveTab('heatmap')}
-            className={`btn btn-sm ${activeTab === 'heatmap' ? 'btn-faculty' : 'btn-secondary'}`}
+            className={`btn btn-sm ${activeTab === 'heatmap' ? 'btn-primary' : 'btn-secondary'}`}
           >
             <MapPin size={16} />
             <span>Issues Heatmap</span>
           </button>
           <button
             onClick={() => setActiveTab('moderation')}
-            className={`btn btn-sm ${activeTab === 'moderation' ? 'btn-faculty' : 'btn-secondary'}`}
+            className={`btn btn-sm ${activeTab === 'moderation' ? 'btn-primary' : 'btn-secondary'}`}
           >
             <ShieldAlert size={16} />
             <span>Moderation Queue</span>
