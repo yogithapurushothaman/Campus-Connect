@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, g
 from campus_connect.database.session import db_session
-from campus_connect.database.models import Club, ClubApplicant, ClubAnnouncement
+from campus_connect.database.models import Club, ClubApplicant, ClubAnnouncement, ClubMember
 from campus_connect.core.middleware import login_required
 
 clubs_bp = Blueprint("clubs", __name__, url_prefix="/api/clubs")
@@ -110,3 +110,82 @@ def post_announcement(club_id):
         "message": "Announcement published successfully.",
         "announcement": announcement.to_dict()
     }), 201
+
+@clubs_bp.route("", methods=["POST"])
+@login_required
+def create_club():
+    # Only Faculty/Staff can create clubs
+    user_role = g.session.get("role", "STUDENT").upper()
+    if user_role not in ("FACULTY", "STAFF"):
+        return jsonify({"error": "Forbidden: Only faculty or staff can create clubs."}), 403
+
+    data = request.get_json() or {}
+    name = data.get("name", "").strip()
+    description = data.get("description", "").strip()
+    category = data.get("category", "Technical").strip()
+    tag_line = data.get("tagLine", "").strip()
+
+    if not name or not description:
+        return jsonify({"error": "Name and description are required."}), 400
+
+    session = db_session()
+    club = Club(
+        name=name,
+        description=description,
+        category=category,
+        tag_line=tag_line,
+        member_count=0
+    )
+    session.add(club)
+    session.commit()
+
+    return jsonify({"message": "Club created successfully!", "club": club.to_dict()}), 201
+
+@clubs_bp.route("/<club_id>", methods=["GET"])
+@login_required
+def get_club_by_id(club_id):
+    session = db_session()
+    club = session.query(Club).filter_by(id=club_id).first()
+    if not club:
+        return jsonify({"error": "Club not found."}), 404
+    return jsonify({"club": club.to_dict()}), 200
+
+@clubs_bp.route("/<club_id>/join", methods=["POST"])
+@login_required
+def toggle_club_membership(club_id):
+    session = db_session()
+    club = session.query(Club).filter_by(id=club_id).first()
+    if not club:
+        return jsonify({"error": "Club not found."}), 404
+
+    existing = session.query(ClubMember).filter_by(
+        club_id=club_id,
+        student_id=g.session["id"]
+    ).first()
+
+    if existing:
+        # Remove membership (Leave)
+        session.delete(existing)
+        club.member_count = max(0, (club.member_count or 0) - 1)
+        session.commit()
+        return jsonify({
+            "message": "Left club successfully.",
+            "isMember": False,
+            "club": club.to_dict()
+        }), 200
+    else:
+        # Add membership (Join)
+        new_member = ClubMember(
+            club_id=club_id,
+            student_id=g.session["id"],
+            role="member"
+        )
+        session.add(new_member)
+        club.member_count = (club.member_count or 0) + 1
+        session.commit()
+        return jsonify({
+            "message": "Joined club successfully!",
+            "isMember": True,
+            "club": club.to_dict()
+        }), 200
+

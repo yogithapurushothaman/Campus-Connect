@@ -40,8 +40,10 @@ class User(Base):
 
     # Relationships
     events = relationship("Event", back_populates="author", cascade="all, delete-orphan")
+    notices = relationship("Notice", back_populates="author", cascade="all, delete-orphan")
     complaints = relationship("Complaint", foreign_keys="[Complaint.author_id]", back_populates="author")
     club_applications = relationship("ClubApplicant", foreign_keys="[ClubApplicant.user_id]", back_populates="user")
+    notifications = relationship("Notification", foreign_keys="[Notification.user_id]", back_populates="user", cascade="all, delete-orphan")
 
     def to_dict(self):
         role_display = "FACULTY" if self.role in ("FACULTY", "STAFF") else "STUDENT"
@@ -72,6 +74,7 @@ class Event(Base):
     date = Column(String(100), nullable=False)
     category = Column(String(50), default="Workshop")
     location_name = Column(String(100), default="Main Campus")
+    venue = Column(String(100), default="Main Campus")
     department = Column(String(100), default="General")
     banner_image = Column(String(255), default="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80")
     is_official = Column(Boolean, default=True)
@@ -90,6 +93,7 @@ class Event(Base):
             "date": self.date,
             "category": self.category,
             "locationName": self.location_name,
+            "venue": self.venue,
             "department": self.department,
             "bannerImage": self.banner_image,
             "isOfficial": self.is_official,
@@ -128,6 +132,7 @@ class Club(Base):
     applicants = relationship("ClubApplicant", back_populates="club", cascade="all, delete-orphan")
     announcements = relationship("ClubAnnouncement", back_populates="club", cascade="all, delete-orphan")
     faculty_advisor = relationship("User", foreign_keys=[faculty_advisor_id])
+    members = relationship("ClubMember", back_populates="club", cascade="all, delete-orphan")
 
     def to_dict(self):
         return {
@@ -153,7 +158,8 @@ class Club(Base):
                 "deadline": self.recruitment_deadline,
                 "applicants": [a.to_dict() for a in self.applicants]
             },
-            "announcements": [an.to_dict() for an in self.announcements]
+            "announcements": [an.to_dict() for an in self.announcements],
+            "members": [m.to_dict() for m in self.members]
         }
 
 class ClubApplicant(Base):
@@ -419,28 +425,204 @@ class ActivityParticipant(Base):
             "joinedAt": self.joined_at,
         }
 
-class NotificationItem(Base):
+class Notification(Base):
     __tablename__ = "notifications"
 
     id = Column(String(36), primary_key=True, default=generate_uuid)
     user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    title = Column(String(200), nullable=False)
     message = Column(Text, nullable=False)
-    notif_type = Column(String(50), default="general")
-    timestamp = Column(String(100), default="Just now")
-    is_read = Column(Boolean, default=False)
-    link = Column(String(255), default="")
-    priority = Column(String(30), default="normal")
+    type = Column(String(50), default="announcement", nullable=False)
+    is_read = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=utc_now)
+
+    # Relationships
+    user = relationship("User", foreign_keys=[user_id], back_populates="notifications")
 
     def to_dict(self):
         return {
             "id": self.id,
             "userId": self.user_id,
-            "title": self.title,
             "message": self.message,
-            "type": self.notif_type,
-            "timestamp": self.timestamp,
+            "type": self.type,
             "isRead": self.is_read,
-            "link": self.link,
-            "priority": self.priority,
+            "createdAt": self.created_at.isoformat() if self.created_at else None,
         }
+
+class Notice(Base):
+    __tablename__ = "notices"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    title = Column(String(200), nullable=False)
+    content = Column(Text, nullable=False)
+    date_posted = Column(DateTime, default=utc_now)
+    author_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime, default=utc_now)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
+
+    # Relationships
+    author = relationship("User", back_populates="notices")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "content": self.content,
+            "datePosted": self.date_posted.isoformat() if self.date_posted else None,
+            "authorId": self.author_id,
+            "author": {
+                "id": self.author.id,
+                "name": self.author.name,
+                "email": self.author.email,
+                "role": self.author.role,
+                "department": self.author.department,
+            } if self.author else None,
+            "createdAt": self.created_at.isoformat() if self.created_at else None,
+        }
+
+class EventRSVP(Base):
+    __tablename__ = "event_rsvps"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    event_id = Column(String(36), ForeignKey("events.id", ondelete="CASCADE"), nullable=False)
+    rsvp_date = Column(DateTime, default=utc_now)
+
+    # Relationships
+    user = relationship("User", foreign_keys=[user_id])
+    event = relationship("Event", foreign_keys=[event_id])
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "userId": self.user_id,
+            "eventId": self.event_id,
+            "rsvpDate": self.rsvp_date.isoformat() if self.rsvp_date else None
+        }
+
+class TeamRequest(Base):
+    __tablename__ = "team_requests"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    title = Column(String(200), nullable=False)
+    category = Column(String(50), default="Sports", nullable=False)
+    description = Column(Text, nullable=False)
+    max_members = Column(Integer, default=5, nullable=False)
+    creator_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime, default=utc_now)
+
+    # Relationships
+    creator = relationship("User", foreign_keys=[creator_id])
+    members = relationship("TeamMember", back_populates="team_request", cascade="all, delete-orphan")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "category": self.category,
+            "description": self.description,
+            "maxMembers": self.max_members,
+            "creatorId": self.creator_id,
+            "creatorName": self.creator.name if self.creator else "Unknown",
+            "creatorAvatar": self.creator.avatar if self.creator else "",
+            "createdAt": self.created_at.isoformat() if self.created_at else None,
+            "members": [m.to_dict() for m in self.members]
+        }
+
+class TeamMember(Base):
+    __tablename__ = "team_members"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    request_id = Column(String(36), ForeignKey("team_requests.id", ondelete="CASCADE"), nullable=False)
+    student_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    status = Column(String(30), default="pending", nullable=False)
+
+    # Relationships
+    team_request = relationship("TeamRequest", back_populates="members")
+    student = relationship("User", foreign_keys=[student_id])
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "requestId": self.request_id,
+            "studentId": self.student_id,
+            "studentName": self.student.name if self.student else "Unknown",
+            "studentAvatar": self.student.avatar if self.student else "",
+            "status": self.status
+        }
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    team_request_id = Column(String(36), ForeignKey("team_requests.id", ondelete="CASCADE"), nullable=False)
+    sender_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    message_text = Column(Text, nullable=False)
+    timestamp = Column(DateTime, default=utc_now)
+
+    # Relationships
+    team_request = relationship("TeamRequest")
+    sender = relationship("User", foreign_keys=[sender_id])
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "teamRequestId": self.team_request_id,
+            "senderId": self.sender_id,
+            "senderName": self.sender.name if self.sender else "Unknown",
+            "senderEmail": self.sender.email if self.sender else "",
+            "senderAvatar": self.sender.avatar if self.sender else "",
+            "messageText": self.message_text,
+            "timestamp": self.timestamp.isoformat() if self.timestamp else None
+        }
+
+class ClubMember(Base):
+    __tablename__ = "club_members"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    club_id = Column(String(36), ForeignKey("clubs.id", ondelete="CASCADE"), nullable=False)
+    student_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    role = Column(String(30), default="member", nullable=False)
+
+    # Relationships
+    club = relationship("Club", back_populates="members")
+    student = relationship("User", foreign_keys=[student_id])
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "clubId": self.club_id,
+            "studentId": self.student_id,
+            "studentName": self.student.name if self.student else "Unknown",
+            "studentEmail": self.student.email if self.student else "",
+            "role": self.role
+        }
+
+class ContentReport(Base):
+    __tablename__ = "content_reports"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    reporter_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    content_type = Column(String(50), nullable=False)  # 'team_request', 'club_update'
+    content_id = Column(String(36), nullable=False)
+    reason = Column(Text, nullable=False)  # Spam, Harassment, Irrelevant
+    status = Column(String(30), default="pending", nullable=False)  # pending, resolved
+    created_at = Column(DateTime, default=utc_now)
+
+    # Relationships
+    reporter = relationship("User", foreign_keys=[reporter_id])
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "reporterId": self.reporter_id,
+            "reporterName": self.reporter.name if self.reporter else "Unknown Reporter",
+            "contentType": self.content_type,
+            "contentId": self.content_id,
+            "reason": self.reason,
+            "status": self.status,
+            "createdAt": self.created_at.isoformat() if self.created_at else None,
+        }
+
+
+
+

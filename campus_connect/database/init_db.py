@@ -1,7 +1,7 @@
 from campus_connect.database.session import engine, db_session, Base
 from campus_connect.database.models import (
     User, Event, Club, ClubApplicant, ClubAnnouncement, Complaint, ComplaintTimeline,
-    Activity, ActivityParticipant
+    Activity, ActivityParticipant, Notice, TeamRequest, TeamMember, ChatMessage, ClubMember
 )
 from campus_connect.core.auth import hash_password
 
@@ -9,6 +9,14 @@ def init_database():
     """Create all tables and seed with initial dual-profile institutional data"""
     Base.metadata.create_all(bind=engine)
     session = db_session()
+
+    # Ensure new columns/tables exist for SQLite
+    try:
+        from sqlalchemy import text
+        session.execute(text("ALTER TABLE events ADD COLUMN venue VARCHAR(100)"))
+        session.commit()
+    except Exception:
+        session.rollback()
 
     # Check if data already seeded
     existing_faculty = session.query(User).filter_by(email="prof.vikram@college.edu").first()

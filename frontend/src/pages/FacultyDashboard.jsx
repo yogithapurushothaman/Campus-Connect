@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Navbar } from '../components/Navbar';
+import { MasterAppShell } from '../components/MasterAppShell';
 import { FacultyKanbanBoard } from '../components/FacultyKanbanBoard';
+import { AdminHeatmap } from '../components/AdminHeatmap';
 import {
   Briefcase,
   Plus,
@@ -13,7 +14,8 @@ import {
   AlertTriangle,
   Send,
   Users,
-  ShieldAlert
+  ShieldAlert,
+  MapPin
 } from 'lucide-react';
 
 export const FacultyDashboard = () => {
@@ -23,14 +25,18 @@ export const FacultyDashboard = () => {
   const [events, setEvents] = useState([]);
   const [clubs, setClubs] = useState([]);
   const [complaints, setComplaints] = useState([]);
+  const [reports, setReports] = useState([]);
 
   // New Event Form State
-  const [showEventModal, setShowEventModal] = useState(false);
   const [evTitle, setEvTitle] = useState('');
   const [evDesc, setEvDesc] = useState('');
   const [evDate, setEvDate] = useState('Dec 15, 2026 • 10:00 AM');
   const [evCategory, setEvCategory] = useState('Workshop');
   const [evLocation, setEvLocation] = useState('Alan Turing Computer Science Block');
+
+  // New Notice Form State
+  const [noticeTitle, setNoticeTitle] = useState('');
+  const [noticeContent, setNoticeContent] = useState('');
 
   const [toastMsg, setToastMsg] = useState(null);
 
@@ -64,9 +70,71 @@ export const FacultyDashboard = () => {
     }
   };
 
+  const loadReports = async () => {
+    try {
+      const res = await authFetch('/api/admin/reports');
+      if (res.ok) {
+        const d = await res.json();
+        setReports(d.reports || []);
+      }
+    } catch (err) {
+      console.error('Faculty load reports error:', err);
+    }
+  };
+
+  const handleReportAction = async (reportId, action) => {
+    try {
+      const res = await authFetch(`/api/admin/reports/${reportId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ action }),
+      });
+
+      if (res.ok) {
+        showToast(action === 'dismiss' ? '✅ Report dismissed.' : '🚨 Offending content taken down successfully.');
+        loadReports();
+        loadData();
+      } else {
+        const err = await res.json();
+        showToast(err.error || 'Failed to perform action.');
+      }
+    } catch (err) {
+      showToast('Error performing moderation action.');
+    }
+  };
+
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'moderation') {
+      loadReports();
+    }
+  }, [activeTab]);
+
+  const handleCreateNotice = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await authFetch('/api/notices', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: noticeTitle,
+          content: noticeContent,
+        }),
+      });
+
+      if (res.ok) {
+        setNoticeTitle('');
+        setNoticeContent('');
+        showToast('📢 Official Notice posted successfully!');
+      } else {
+        const err = await res.json();
+        showToast(err.error || 'Failed to post notice.');
+      }
+    } catch (err) {
+      showToast('Error posting notice.');
+    }
+  };
 
   const handleCreateEvent = async (e) => {
     e.preventDefault();
@@ -78,6 +146,7 @@ export const FacultyDashboard = () => {
           description: evDesc,
           date: evDate,
           category: evCategory,
+          venue: evLocation,
           locationName: evLocation,
         }),
       });
@@ -85,7 +154,6 @@ export const FacultyDashboard = () => {
       if (res.ok) {
         const d = await res.json();
         setEvents((prev) => [d.event, ...prev]);
-        setShowEventModal(false);
         setEvTitle('');
         setEvDesc('');
         showToast('🎓 Official Event published successfully to all students!');
@@ -121,9 +189,8 @@ export const FacultyDashboard = () => {
   };
 
   return (
-    <>
-      <Navbar />
-      <main className="main-container">
+    <MasterAppShell activeNav={activeTab} onNavChange={setActiveTab}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
         {/* Faculty Command Center Banner */}
         <div className="portal-hero hero-faculty">
@@ -142,7 +209,7 @@ export const FacultyDashboard = () => {
             </div>
 
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setShowEventModal(true)} className="btn btn-secondary btn-sm" style={{ color: 'var(--faculty-accent)', fontWeight: '700' }}>
+              <button onClick={() => setActiveTab('events')} className="btn btn-secondary btn-sm" style={{ color: 'var(--faculty-accent)', fontWeight: '700' }}>
                 <Plus size={16} />
                 <span>Publish Official Event</span>
               </button>
@@ -151,20 +218,27 @@ export const FacultyDashboard = () => {
         </div>
 
         {/* Navigation Tabs */}
-        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
           <button
             onClick={() => setActiveTab('complaints')}
             className={`btn btn-sm ${activeTab === 'complaints' ? 'btn-faculty' : 'btn-secondary'}`}
           >
             <ShieldAlert size={16} />
-            <span>Campus Care Triage Board</span>
+            <span>Campus Care</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('notices')}
+            className={`btn btn-sm ${activeTab === 'notices' ? 'btn-faculty' : 'btn-secondary'}`}
+          >
+            <Send size={16} />
+            <span>Post Notice</span>
           </button>
           <button
             onClick={() => setActiveTab('events')}
             className={`btn btn-sm ${activeTab === 'events' ? 'btn-faculty' : 'btn-secondary'}`}
           >
             <Calendar size={16} />
-            <span>Official Events ({events.length})</span>
+            <span>Create Event</span>
           </button>
           <button
             onClick={() => setActiveTab('clubs')}
@@ -172,6 +246,20 @@ export const FacultyDashboard = () => {
           >
             <Briefcase size={16} />
             <span>Club Advisor Workbench</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('heatmap')}
+            className={`btn btn-sm ${activeTab === 'heatmap' ? 'btn-faculty' : 'btn-secondary'}`}
+          >
+            <MapPin size={16} />
+            <span>Issues Heatmap</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('moderation')}
+            className={`btn btn-sm ${activeTab === 'moderation' ? 'btn-faculty' : 'btn-secondary'}`}
+          >
+            <ShieldAlert size={16} />
+            <span>Moderation Queue</span>
           </button>
         </div>
 
@@ -186,91 +274,60 @@ export const FacultyDashboard = () => {
           </section>
         )}
 
-        {/* TAB 2: EVENTS WORKSPACE */}
-        {activeTab === 'events' && (
-          <section>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>Official Campus Events & Hackathons</h3>
-              <button onClick={() => setShowEventModal(true)} className="btn btn-faculty btn-sm">
-                <Plus size={16} />
-                <span>New Event</span>
-              </button>
-            </div>
-
-            <div className="grid-3">
-              {events.map((ev) => (
-                <div key={ev.id} className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <span className="status-pill status-acknowledged">{ev.category}</span>
-                      <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)' }}>{ev.department}</span>
-                    </div>
-                    <h4 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '6px' }}>{ev.title}</h4>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '12px' }}>{ev.description}</p>
-                    
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <div>📅 {ev.date}</div>
-                      <div>📍 {ev.locationName}</div>
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Published by: {ev.author?.name || user?.name}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* TAB 3: CLUB ADVISOR WORKBENCH */}
-        {activeTab === 'clubs' && (
-          <section>
+        {/* TAB 2: POST NOTICE */}
+        {activeTab === 'notices' && (
+          <section style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div className="glass-card" style={{ padding: '24px' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '16px' }}>👨‍🏫 Student Club Recruitment Applications</h3>
-              
-              {clubs.flatMap(c => (c.recruitment?.applicants || []).map(a => ({ ...a, clubName: c.name, clubId: c.id }))).length === 0 ? (
-                <p style={{ color: 'var(--text-muted)' }}>No pending student applications.</p>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  {clubs.flatMap(c => (c.recruitment?.applicants || []).map(a => ({ ...a, clubName: c.name, clubId: c.id }))).map((app) => (
-                    <div key={app.id} style={{ background: '#F8FAFC', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                      <div>
-                        <div style={{ fontWeight: '800', fontSize: '1rem' }}>{app.userName} — <span style={{ color: 'var(--faculty-accent)' }}>{app.roleApplied}</span></div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Club: <strong>{app.clubName}</strong> • {app.userEmail} • {app.userYear}</div>
-                        <div style={{ fontSize: '0.85rem', marginTop: '6px', color: 'var(--text-main)' }}>"{app.whyJoin}"</div>
-                      </div>
-
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={() => handleApplicantDecision(app.clubId, app.id, 'accepted')} className="btn btn-success btn-sm">
-                          <CheckCircle2 size={14} />
-                          <span>Approve</span>
-                        </button>
-                        <button onClick={() => handleApplicantDecision(app.clubId, app.id, 'rejected')} className="btn btn-danger btn-sm">
-                          <XCircle size={14} />
-                          <span>Reject</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Send size={18} style={{ color: 'var(--faculty-accent)' }} />
+                <span>Post Official Campus Notice</span>
+              </h3>
+              <form onSubmit={handleCreateNotice}>
+                <div className="form-group">
+                  <label className="form-label">Notice Title:</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. Urgent: Final Exam Registration Deadline"
+                    value={noticeTitle}
+                    onChange={(e) => setNoticeTitle(e.target.value)}
+                    required
+                  />
                 </div>
-              )}
+                <div className="form-group">
+                  <label className="form-label">Content:</label>
+                  <textarea
+                    className="form-textarea"
+                    rows="5"
+                    placeholder="Provide details about the announcement..."
+                    value={noticeContent}
+                    onChange={(e) => setNoticeContent(e.target.value)}
+                    required
+                  />
+                </div>
+                <button type="submit" className="btn btn-faculty" style={{ width: '100%', marginTop: '8px' }}>
+                  Publish Notice
+                </button>
+              </form>
             </div>
           </section>
         )}
 
-        {/* Publish Event Modal */}
-        {showEventModal && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 }}>
-            <div className="glass-card" style={{ maxWidth: 500, width: '100%', padding: 24, background: '#fff' }}>
-              <h3 style={{ fontWeight: '800', fontSize: '1.2rem', marginBottom: 16 }}>🎓 Publish Official Campus Event</h3>
+        {/* TAB 3: CREATE EVENT */}
+        {activeTab === 'events' && (
+          <section style={{ maxWidth: '600px', margin: '0 auto' }}>
+            <div className="glass-card" style={{ padding: '24px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Calendar size={18} style={{ color: 'var(--faculty-accent)' }} />
+                <span>Create Official Campus Event</span>
+              </h3>
               <form onSubmit={handleCreateEvent}>
                 <div className="form-group">
                   <label className="form-label">Event Title:</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="e.g. AI & Cloud Hackathon 2026"
+                    placeholder="e.g. SRM CSE Department: Annual Tech Hackathon"
                     value={evTitle}
                     onChange={(e) => setEvTitle(e.target.value)}
                     required
@@ -310,18 +367,104 @@ export const FacultyDashboard = () => {
                   <textarea
                     className="form-textarea"
                     rows="3"
+                    placeholder="Provide details about the event..."
                     value={evDesc}
                     onChange={(e) => setEvDesc(e.target.value)}
                     required
                   />
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-                  <button type="button" onClick={() => setShowEventModal(false)} className="btn btn-secondary btn-sm">Cancel</button>
-                  <button type="submit" className="btn btn-faculty btn-sm">Publish Event</button>
-                </div>
+                <button type="submit" className="btn btn-faculty" style={{ width: '100%', marginTop: '8px' }}>
+                  Publish Event
+                </button>
               </form>
             </div>
-          </div>
+          </section>
+        )}
+
+        {/* TAB 4: CLUB ADVISOR WORKBENCH */}
+        {activeTab === 'clubs' && (
+          <section>
+            <div className="glass-card" style={{ padding: '24px' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '16px' }}>👨‍🏫 Student Club Recruitment Applications</h3>
+              
+              {clubs.flatMap(c => (c.recruitment?.applicants || []).map(a => ({ ...a, clubName: c.name, clubId: c.id }))).length === 0 ? (
+                <p style={{ color: 'var(--text-muted)' }}>No pending student applications.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {clubs.flatMap(c => (c.recruitment?.applicants || []).map(a => ({ ...a, clubName: c.name, clubId: c.id }))).map((app) => (
+                    <div key={app.id} style={{ background: '#F8FAFC', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                      <div>
+                        <div style={{ fontWeight: '800', fontSize: '1rem' }}>{app.userName} — <span style={{ color: 'var(--faculty-accent)' }}>{app.roleApplied}</span></div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Club: <strong>{app.clubName}</strong> • {app.userEmail} • {app.userYear}</div>
+                        <div style={{ fontSize: '0.85rem', marginTop: '6px', color: 'var(--text-main)' }}>"{app.whyJoin}"</div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={() => handleApplicantDecision(app.clubId, app.id, 'accepted')} className="btn btn-success btn-sm">
+                          <CheckCircle2 size={14} />
+                          <span>Approve</span>
+                        </button>
+                        <button onClick={() => handleApplicantDecision(app.clubId, app.id, 'rejected')} className="btn btn-danger btn-sm">
+                          <XCircle size={14} />
+                          <span>Reject</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* TAB 5: CAMPUS ISSUES HEATMAP */}
+        {activeTab === 'heatmap' && (
+          <section>
+            <AdminHeatmap />
+          </section>
+        )}
+
+        {/* TAB 6: TRUST & SAFETY MODERATION QUEUE */}
+        {activeTab === 'moderation' && (
+          <section>
+            <div className="glass-card" style={{ padding: '24px' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ShieldAlert size={18} style={{ color: 'var(--warning-red)' }} />
+                <span>Trust & Safety Moderation Queue</span>
+              </h3>
+              
+              {reports.length === 0 ? (
+                <p style={{ color: 'var(--text-muted)' }}>Moderation queue is empty. Excellent job!</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {reports.map((report) => (
+                    <div key={report.id} style={{ background: '#F8FAFC', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                      <div>
+                        <div style={{ fontWeight: '800', fontSize: '1.05rem' }}>
+                          Reported {report.contentType === 'team_request' ? 'Team Request' : 'Club Update'}
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          Reporter: <strong>{report.reporterName}</strong> • Reason: <span style={{ color: 'var(--warning-red)', fontWeight: '700' }}>{report.reason}</span>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-subtle)', marginTop: '4px' }}>
+                          Content ID: <code>{report.contentId}</code>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={() => handleReportAction(report.id, 'dismiss')} className="btn btn-secondary btn-sm" style={{ fontWeight: '700' }}>
+                          Dismiss
+                        </button>
+                        <button onClick={() => handleReportAction(report.id, 'takedown')} className="btn btn-danger btn-sm" style={{ fontWeight: '700' }}>
+                          Take Down
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
         )}
 
         {/* Floating Toast */}
@@ -331,7 +474,7 @@ export const FacultyDashboard = () => {
           </div>
         )}
 
-      </main>
-    </>
+        </div>
+    </MasterAppShell>
   );
 };

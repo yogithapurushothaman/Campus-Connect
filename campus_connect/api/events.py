@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, g
 from campus_connect.database.session import db_session
-from campus_connect.database.models import Event
+from campus_connect.database.models import Event, EventRSVP
 from campus_connect.core.middleware import login_required
 
 events_bp = Blueprint("events", __name__, url_prefix="/api/events")
@@ -30,7 +30,7 @@ def create_event():
     description = data.get("description", "").strip()
     date = data.get("date", "").strip()
     category = data.get("category", "Workshop").strip()
-    location_name = data.get("locationName", "Main Campus").strip()
+    venue = data.get("venue", "").strip() or data.get("locationName", "Main Campus").strip()
     department = data.get("department", g.session.get("department", "General")).strip()
     banner_image = data.get("bannerImage", "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80")
 
@@ -43,7 +43,8 @@ def create_event():
         description=description,
         date=date,
         category=category,
-        location_name=location_name,
+        location_name=venue,
+        venue=venue,
         department=department,
         banner_image=banner_image,
         is_official=True,
@@ -56,3 +57,22 @@ def create_event():
         "message": "Event published successfully.",
         "event": new_event.to_dict()
     }), 201
+
+@events_bp.route("/<event_id>/rsvp", methods=["POST"])
+@login_required
+def rsvp_event(event_id):
+    session = db_session()
+    event = session.query(Event).filter_by(id=event_id).first()
+    if not event:
+        return jsonify({"error": "Event not found"}), 404
+
+    user_id = g.session["id"]
+    existing = session.query(EventRSVP).filter_by(user_id=user_id, event_id=event_id).first()
+    if existing:
+        return jsonify({"message": "Already RSVP'd to this event", "status": "exists"}), 200
+
+    new_rsvp = EventRSVP(user_id=user_id, event_id=event_id)
+    session.add(new_rsvp)
+    session.commit()
+
+    return jsonify({"message": "RSVP confirmed successfully.", "status": "created"}), 201

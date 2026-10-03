@@ -21,6 +21,7 @@ export const RaiseIssueForm = ({ onComplaintSubmitted }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
 
   const getCategoryIcon = (cat) => {
     switch (cat) {
@@ -55,6 +56,7 @@ export const RaiseIssueForm = ({ onComplaintSubmitted }) => {
           description: description.trim(),
           buildingName: buildingName.trim() || 'General Campus Area',
           roomOrArea: roomOrArea.trim() || 'General Area',
+          isAnonymous: isAnonymous,
         }),
       });
 
@@ -68,6 +70,7 @@ export const RaiseIssueForm = ({ onComplaintSubmitted }) => {
       setTitle('');
       setDescription('');
       setRoomOrArea('');
+      setIsAnonymous(false);
 
       if (onComplaintSubmitted) {
         onComplaintSubmitted(data.complaint);
@@ -232,6 +235,25 @@ export const RaiseIssueForm = ({ onComplaintSubmitted }) => {
             disabled={isSubmitting}
             required
           />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="checkbox"
+              id="isAnonymous"
+              checked={isAnonymous}
+              onChange={(e) => setIsAnonymous(e.target.checked)}
+              disabled={isSubmitting}
+              style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+            />
+            <label htmlFor="isAnonymous" style={{ margin: 0, fontSize: '0.875rem', fontWeight: '600', color: 'var(--text-main)', cursor: 'pointer' }}>
+              Submit Anonymously
+            </label>
+          </div>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '26px' }}>
+            Your identity will be hidden from other students, but visible to verified administrators for safety.
+          </span>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

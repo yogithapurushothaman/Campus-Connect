@@ -3,9 +3,16 @@ import sys
 
 # Ensure .venv site-packages and project root are on sys.path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-venv_site = os.path.join(BASE_DIR, ".venv", "lib", "python3.13", "site-packages")
-if os.path.exists(venv_site) and venv_site not in sys.path:
-    sys.path.insert(0, venv_site)
+possible_site_packages = [
+    os.path.join(BASE_DIR, ".venv", "lib", "site-packages"),
+    os.path.join(BASE_DIR, ".venv", "Lib", "site-packages"),
+    os.path.join(BASE_DIR, ".venv", "lib", "python3.13", "site-packages"),
+    os.path.join(BASE_DIR, ".venv", "lib", "python3.12", "site-packages"),
+    os.path.join(BASE_DIR, ".venv", "lib", "python3.11", "site-packages"),
+]
+for site in possible_site_packages:
+    if os.path.exists(site) and site not in sys.path:
+        sys.path.insert(0, site)
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 

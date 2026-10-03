@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify, g
 from sqlalchemy import or_
 from campus_connect.database.session import db_session
-from campus_connect.database.models import Complaint, ComplaintTimeline
+from campus_connect.database.models import Complaint, ComplaintTimeline, Notification
 from campus_connect.core.middleware import login_required
 from campus_connect.core.ai_helpers import predict_complaint_attributes
 
@@ -34,6 +34,17 @@ def normalize_status_input(status_str: str) -> str:
     elif raw in ("resolved", "completed", "closed"):
         return "Resolved"
     return status_str.strip()
+
+def serialize_complaint(complaint, requester_role):
+    data = complaint.to_dict()
+    if complaint.is_anonymous and requester_role not in ("FACULTY", "STAFF"):
+        data["authorName"] = "Anonymous Student"
+        data["author_name"] = "Anonymous Student"
+        data["studentId"] = None
+        data["student_id"] = None
+        data["authorId"] = None
+        data["author_id"] = None
+    return data
 
 @complaints_bp.route("", methods=["GET"])
 @login_required
@@ -68,7 +79,8 @@ def get_complaints():
         )
 
     complaints = query.order_by(Complaint.created_at.desc()).all()
-    return jsonify({"complaints": [c.to_dict() for c in complaints]}), 200
+    user_role = g.session.get("role", "STUDENT").upper()
+    return jsonify({"complaints": [serialize_complaint(c, user_role) for c in complaints]}), 200
 
 @complaints_bp.route("/me", methods=["GET"])
 @login_required
@@ -89,7 +101,8 @@ def get_my_complaints():
         .order_by(Complaint.created_at.desc())
         .all()
     )
-    return jsonify({"complaints": [c.to_dict() for c in complaints]}), 200
+    user_role = g.session.get("role", "STUDENT").upper()
+    return jsonify({"complaints": [serialize_complaint(c, user_role) for c in complaints]}), 200
 
 @complaints_bp.route("", methods=["POST"])
 @login_required
@@ -217,6 +230,17 @@ def update_complaint_status(complaint_id):
         updated_by=g.session.get("name", "Faculty"),
     )
     session.add(timeline_item)
+
+    # Notify student of status change
+    target_user_id = complaint.student_id or complaint.author_id
+    if target_user_id:
+        notif = Notification(
+            user_id=target_user_id,
+            message=f"Faculty updated the status of your complaint: '{complaint.title}' to '{normalized_status}'.",
+            type="complaint"
+        )
+        session.add(notif)
+
     session.commit()
 
     return jsonify({
@@ -260,3 +284,78 @@ def add_admin_note(complaint_id):
         "message": "Internal note saved.",
         "adminNotes": complaint.admin_notes
     }), 200
+
+# Campus Heatmap Blueprint for Administrators (Faculty/Staff)
+admin_bp = Blueprint("admin_complaints", __name__, url_prefix="/api/admin/complaints")
+
+BUILDING_COORDINATES = {
+    "bld_eng_1": [12.8235, 80.0445],      # Alan Turing Computer Science Block
+    "bld_lib_1": [12.8230, 80.0440],      # Rabindranath Tagore Central Library
+    "bld_sports_1": [12.8240, 80.0430],   # Major Dhyan Chand Sports Complex
+    "bld_hostel_b": [12.8220, 80.0435],   # Aryabhata Boys Residence Hall
+    "bld_hostel_g": [12.8215, 80.0440],   # Kalpana Chawla Girls Residence Hall
+    "bld_food_1": [12.8225, 80.0450],     # Campus Student Center & Food Court
+}
+
+def get_fallback_coordinates(building_name):
+    if not building_name:
+        return [12.8230, 80.0440]
+    name_lower = building_name.lower()
+    if "library" in name_lower or "tagore" in name_lower:
+        return [12.8230, 80.0440]
+    elif "computer" in name_lower or "turing" in name_lower or "cse" in name_lower or "engineering" in name_lower:
+        return [12.8235, 80.0445]
+    elif "sports" in name_lower or "gym" in name_lower or "complex" in name_lower or "dhyan" in name_lower:
+        return [12.8240, 80.0430]
+    elif "boys" in name_lower or "hostel_b" in name_lower or "aryabhata" in name_lower:
+        return [12.8220, 80.0435]
+    elif "girls" in name_lower or "hostel_g" in name_lower or "kalpana" in name_lower:
+        return [12.8215, 80.0440]
+    elif "food" in name_lower or "court" in name_lower or "canteen" in name_lower or "center" in name_lower:
+        return [12.8225, 80.0450]
+    return [12.8230, 80.0440]
+
+@admin_bp.route("/heatmap", methods=["GET"])
+@login_required
+def get_complaints_heatmap():
+    """
+    Retrieve active (non-resolved) complaints grouped by location.
+    Strictly protected for FACULTY and STAFF roles.
+    """
+    user_role = g.session.get("role", "STUDENT").upper()
+    if user_role not in ("FACULTY", "STAFF"):
+        return jsonify({
+            "error": "Forbidden: Only faculty members and authorized staff can access admin heatmap data."
+        }), 403
+
+    session = db_session()
+    # Fetch active complaints (not Resolved)
+    active_complaints = session.query(Complaint).filter(Complaint.status != "Resolved").all()
+
+    # Grouping by building ID or building Name
+    groups = {}
+    for complaint in active_complaints:
+        bld_id = complaint.building_id or "unknown"
+        bld_name = complaint.building_name or "Unknown Location"
+        
+        # Standardize building ID if it maps to coordinates
+        if bld_id not in BUILDING_COORDINATES:
+            # Try to resolve by name matching
+            matched_coords = get_fallback_coordinates(bld_name)
+            # Create a unique key for grouping
+            key = f"descriptive_{bld_name.replace(' ', '_')}"
+        else:
+            matched_coords = BUILDING_COORDINATES[bld_id]
+            key = bld_id
+            
+        if key not in groups:
+            groups[key] = {
+                "buildingId": bld_id,
+                "locationName": bld_name,
+                "position": matched_coords,
+                "activeTicketsCount": 0
+            }
+        groups[key]["activeTicketsCount"] += 1
+
+    return jsonify({"heatmapData": list(groups.values())}), 200
+

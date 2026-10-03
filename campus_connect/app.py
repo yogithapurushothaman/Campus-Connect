@@ -2,7 +2,7 @@ from flask import Flask, render_template, redirect, url_for, request, g
 from flask_cors import CORS
 from campus_connect.config import Config
 from campus_connect.database.session import db_session, Base, engine
-from campus_connect.database.models import User, Event, Activity, Club, Complaint
+from campus_connect.database.models import User, Event, Activity, Club, Complaint, Notification, ContentReport
 from campus_connect.database.init_db import init_database
 from campus_connect.core.auth import get_session_from_request
 from campus_connect.core.middleware import login_required, require_faculty
@@ -10,9 +10,14 @@ from campus_connect.api.auth import auth_bp
 from campus_connect.api.events import events_bp
 from campus_connect.api.activities import activities_bp
 from campus_connect.api.clubs import clubs_bp
-from campus_connect.api.complaints import complaints_bp
+from campus_connect.api.complaints import complaints_bp, admin_bp
 from campus_connect.api.map import map_bp
 from campus_connect.api.ai import ai_bp
+from campus_connect.api.notices import notices_bp
+from campus_connect.api.users import users_bp
+from campus_connect.api.team_requests import team_requests_bp
+from campus_connect.api.notifications import notifications_bp
+from campus_connect.api.reports import reports_bp, admin_reports_bp
 
 def create_app():
     app = Flask(
@@ -46,8 +51,16 @@ def create_app():
     app.register_blueprint(activities_bp)
     app.register_blueprint(clubs_bp)
     app.register_blueprint(complaints_bp)
+    app.register_blueprint(admin_bp)
     app.register_blueprint(map_bp)
     app.register_blueprint(ai_bp)
+    app.register_blueprint(notices_bp)
+    app.register_blueprint(users_bp)
+    app.register_blueprint(team_requests_bp)
+    app.register_blueprint(notifications_bp)
+    app.register_blueprint(reports_bp)
+    app.register_blueprint(admin_reports_bp)
+
 
     @app.teardown_appcontext
     def shutdown_session(exception=None):
