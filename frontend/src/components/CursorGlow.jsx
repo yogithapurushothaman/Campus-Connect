@@ -44,10 +44,9 @@ export const CursorGlow = () => {
         inset: 0,
         pointerEvents: 'none',
         zIndex: 9999,
-        background: 'radial-gradient(600px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px), rgba(255, 255, 255, 0.85), transparent 40%)',
+        background: 'radial-gradient(250px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px), rgba(233, 213, 255, 0.35), rgba(192, 132, 252, 0.12) 40%, transparent 80%)',
         opacity: 0,
         transition: 'opacity 0.4s ease',
-        mixBlendMode: 'soft-light'
       }}
     />
   );
