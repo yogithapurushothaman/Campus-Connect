@@ -218,11 +218,12 @@ export const Navbar = () => {
           </button>
         </div>
       ) : (
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <ThemeToggle />
           <Link to="/login/student" className="btn btn-secondary btn-sm">
             Student Login
           </Link>
-          <Link to="/login/faculty" className="btn btn-primary btn-sm">
+          <Link to="/login/faculty" className="btn btn-primary btn-sm" style={{ background: 'var(--primary-purple)' }}>
             Faculty Login
           </Link>
         </div>
