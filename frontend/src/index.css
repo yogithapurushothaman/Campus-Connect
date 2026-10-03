@@ -298,8 +298,13 @@ body {
   border-radius: var(--radius-md);
   font-size: 0.875rem;
   color: var(--text-main);
-  background: #FFFFFF;
+  background: var(--bg-card);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-select option {
+  background: var(--bg-card);
+  color: var(--text-main);
 }
 
 .form-input:focus, .form-select:focus, .form-textarea:focus {
