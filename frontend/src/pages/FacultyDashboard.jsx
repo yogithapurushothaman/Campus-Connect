@@ -195,40 +195,137 @@ export const FacultyDashboard = () => {
     <MasterAppShell activeNav={activeTab} onNavChange={setActiveTab}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
-        {/* TOP AGENCY HERO SECTION */}
-        <div style={{ position: 'relative', minHeight: '220px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0 20px 0' }}>
-          <div style={{ maxWidth: '650px', zIndex: 2 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'var(--primary-light)', color: 'var(--primary-purple)', padding: '6px 14px', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '800', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '14px', border: '1px solid var(--border-color)' }}>
-              <ShieldCheck size={14} />
-              <span>FACULTY COMMAND CENTER • RBAC AUTHORIZED</span>
+        {/* TOP AGENCY HERO SECTION (SYNCED WITH STUDENT DASHBOARD) */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '32px', alignItems: 'center', minHeight: '380px', padding: '20px 0 30px 0' }}>
+          {/* Left Column: Headline, Description & Dual Toggle */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--primary-purple)', background: 'var(--primary-light)', padding: '6px 16px', borderRadius: '9999px', border: '1px solid var(--border-color)' }}>
+                SRM INSTITUTE OF SCIENCE & TECHNOLOGY
+              </span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-subtle)', fontWeight: '600' }}>
+                • Faculty Command Portal
+              </span>
             </div>
-            
-            <h1 style={{ fontSize: '2.4rem', fontWeight: '800', color: 'var(--text-main)', letterSpacing: '-0.02em', lineHeight: '1.15', margin: '0 0 12px 0', textTransform: 'uppercase' }}>
-              FACULTY HUB.<br />
-              <span style={{ color: 'var(--primary-purple)' }}>FULLY UNIFIED.</span>
-            </h1>
 
-            <p style={{ fontSize: '0.975rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: '0 0 20px 0', fontWeight: '500' }}>
-              Welcome back, {user?.name || 'Faculty Member'}. Triage student issues on Kanban, publish official campus events, broadcast notices, and review moderation queue in real time.
-            </p>
+            <div>
+              <h1 style={{ fontSize: '3.4rem', fontWeight: '900', margin: 0, color: 'var(--text-main)', letterSpacing: '-0.035em', lineHeight: '1.05', textTransform: 'uppercase' }}>
+                FACULTY HUB.<br />FULLY UNIFIED.
+              </h1>
+              <p style={{ fontSize: '1.05rem', fontWeight: '500', color: 'var(--text-muted)', margin: '14px 0 0 0', lineHeight: '1.55', maxWidth: '520px' }}>
+                Welcome back, {user?.name?.split(' ')[0] || 'Dr. Vikram'} 👋. Triage student complaints on Kanban, publish official campus events, broadcast notices, and review moderation queue in real time.
+              </p>
+            </div>
 
-            <SegmentedToggle
-              value={viewToggle}
-              onChange={setViewToggle}
-              options={[
-                { id: 'overview', label: 'Overview' },
-                { id: 'feed', label: 'Faculty Feed' }
-              ]}
-            />
+            {/* DUAL PILL TOGGLE + QUICK ACTION BUTTONS */}
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginTop: '8px' }}>
+              <SegmentedToggle
+                options={[
+                  { id: 'overview', label: 'Overview' },
+                  { id: 'feed', label: 'Faculty Feed' }
+                ]}
+                activeId={viewToggle}
+                onChange={(id) => setViewToggle(id)}
+              />
+
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <button 
+                  onClick={() => setActiveTab('complaints')} 
+                  className="btn btn-secondary btn-sm" 
+                  style={{ fontWeight: '700', borderRadius: '9999px', padding: '10px 20px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}
+                >
+                  🛡️ Campus Care
+                </button>
+                <button 
+                  onClick={() => setActiveTab('events')} 
+                  className="btn btn-primary btn-sm" 
+                  style={{ background: 'var(--primary-purple)', fontWeight: '700', borderRadius: '9999px', padding: '10px 20px', boxShadow: '0 6px 18px rgba(139,92,246,0.35)' }}
+                >
+                  + Publish Event
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div style={{ position: 'relative', width: '380px', height: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <FloatingNexus3D height="240px" />
+          {/* Right Column: Clean Frameless 3D Nexus Floating Freely in Empty Space */}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '360px' }}>
+            <FloatingNexus3D height="360px" />
           </div>
         </div>
 
-        {/* SUB NAVIGATION CONTROLS */}
-        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
+        {/* KPI METRIC SUMMARY CARDS (HORIZONTAL ROW MATCHING STUDENT PORTAL) */}
+        <div className="saas-metrics-grid">
+          <div className="saas-metric-card" onClick={() => setActiveTab('complaints')}>
+            <div>
+              <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Care Tickets
+              </span>
+              <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-main)', marginTop: '4px' }}>
+                {complaints.length}
+              </div>
+              <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                ● Active Triage
+              </span>
+            </div>
+            <div style={{ background: 'rgba(107, 33, 168, 0.1)', padding: '12px', borderRadius: '12px', color: 'var(--primary-purple)' }}>
+              <ShieldAlert size={22} />
+            </div>
+          </div>
+
+          <div className="saas-metric-card" onClick={() => setActiveTab('events')}>
+            <div>
+              <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Published Events
+              </span>
+              <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-main)', marginTop: '4px' }}>
+                {events.length}
+              </div>
+              <span style={{ fontSize: '0.75rem', color: 'var(--primary-purple)', fontWeight: '600', marginTop: '2px', display: 'block' }}>
+                Official Fests
+              </span>
+            </div>
+            <div style={{ background: 'rgba(107, 33, 168, 0.1)', padding: '12px', borderRadius: '12px', color: 'var(--primary-purple)' }}>
+              <Calendar size={22} />
+            </div>
+          </div>
+
+          <div className="saas-metric-card" onClick={() => setActiveTab('clubs')}>
+            <div>
+              <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Clubs Advised
+              </span>
+              <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-main)', marginTop: '4px' }}>
+                {clubs.length}
+              </div>
+              <span style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: '600', marginTop: '2px', display: 'block' }}>
+                ● Active Societies
+              </span>
+            </div>
+            <div style={{ background: 'rgba(107, 33, 168, 0.1)', padding: '12px', borderRadius: '12px', color: 'var(--primary-purple)' }}>
+              <Briefcase size={22} />
+            </div>
+          </div>
+
+          <div className="saas-metric-card" onClick={() => setActiveTab('moderation')}>
+            <div>
+              <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Moderation Reports
+              </span>
+              <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-main)', marginTop: '4px' }}>
+                {reports.length}
+              </div>
+              <span style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: '600', marginTop: '2px', display: 'block' }}>
+                Flagged Queue
+              </span>
+            </div>
+            <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '12px', color: '#ef4444' }}>
+              <ShieldCheck size={22} />
+            </div>
+          </div>
+        </div>
+
+        {/* SUB NAVIGATION TAB BAR */}
+        <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', flexWrap: 'wrap', margin: '12px 0 24px 0' }}>
           <button
             onClick={() => setActiveTab('complaints')}
             className={`btn btn-sm ${activeTab === 'complaints' ? 'btn-primary' : 'btn-secondary'}`}
