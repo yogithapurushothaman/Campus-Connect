@@ -101,10 +101,9 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
     return (
       <div
         key={cmp.id}
-        className="glass-card"
         style={{
           padding: '16px',
-          background: '#FFFFFF',
+          background: 'var(--bg-card)',
           borderRadius: 'var(--radius-md)',
           border: '1px solid var(--border-color)',
           boxShadow: 'var(--shadow-sm)',
@@ -124,18 +123,19 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: 'rgba(255, 255, 255, 0.7)',
+              background: 'var(--bg-card)',
+              opacity: 0.8,
               borderRadius: 'var(--radius-md)',
               zIndex: 5,
             }}
           >
-            <Loader2 size={22} className="animate-spin" color="var(--primary)" />
+            <Loader2 size={22} className="animate-spin" color="var(--primary-purple)" />
           </div>
         )}
 
         {/* Card Header: Ticket Number & Category */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontWeight: '800', fontSize: '0.8rem', color: 'var(--faculty-accent)' }}>
+          <span style={{ fontWeight: '800', fontSize: '0.8rem', color: 'var(--primary-purple)' }}>
             #{cmp.ticketNumber || cmp.ticket_number || 'TICKET'}
           </span>
           <span
@@ -147,8 +147,9 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
               borderRadius: 'var(--radius-full)',
               fontSize: '0.7rem',
               fontWeight: '700',
-              background: '#F1F5F9',
+              background: 'var(--bg-page)',
               color: 'var(--text-muted)',
+              border: '1px solid var(--border-color)',
             }}
           >
             {getCategoryIcon(cmp.category)}
@@ -158,7 +159,7 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
 
         {/* Title & Description */}
         <div>
-          <h4 style={{ fontSize: '0.925rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '4px' }}>
+          <h4 style={{ fontSize: '0.925rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px', lineHeight: '1.3' }}>
             {cmp.title}
           </h4>
           <p
@@ -170,6 +171,7 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
               WebkitLineClamp: 3,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
+              margin: 0,
             }}
           >
             {cmp.description}
@@ -177,18 +179,18 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
         </div>
 
         {/* Metadata: Student, Location, Time */}
-        <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', display: 'flex', flexDirection: 'column', gap: '4px', borderTop: '1px solid #F1F5F9', paddingTop: '8px' }}>
+        <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', display: 'flex', flexDirection: 'column', gap: '4px', borderTop: '1px solid var(--border-color)', paddingTop: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-main)', fontWeight: '600' }}>
-            <User size={12} color="var(--text-muted)" />
+            <User size={12} color="var(--primary-purple)" />
             <span>{cmp.authorName || cmp.author_name || 'Student'}</span>
           </div>
           {cmp.buildingName && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
               <Building2 size={12} />
               <span>{cmp.buildingName} {cmp.roomOrArea ? `(${cmp.roomOrArea})` : ''}</span>
             </div>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-subtle)' }}>
             <Calendar size={12} />
             <span>{formatDate(cmp.createdAt || cmp.created_at)}</span>
           </div>
@@ -201,7 +203,7 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
               <button
                 onClick={() => handleMoveStatus(cmp.id, 'In Progress')}
                 className="btn btn-secondary btn-sm"
-                style={{ flex: 1, fontSize: '0.75rem', padding: '6px 8px', background: '#FFFBEB', color: '#B45309', borderColor: '#FDE68A' }}
+                style={{ flex: 1, fontSize: '0.75rem', padding: '6px 8px', background: 'rgba(245, 158, 11, 0.15)', color: '#F59E0B', borderColor: 'rgba(245, 158, 11, 0.3)', fontWeight: '700' }}
                 title="Move ticket to In Progress"
               >
                 <span>In Progress</span>
@@ -210,7 +212,7 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
               <button
                 onClick={() => handleMoveStatus(cmp.id, 'Resolved')}
                 className="btn btn-success btn-sm"
-                style={{ fontSize: '0.75rem', padding: '6px 8px' }}
+                style={{ fontSize: '0.75rem', padding: '6px 8px', fontWeight: '700' }}
                 title="Mark ticket as Resolved immediately"
               >
                 <CheckCircle2 size={12} />
@@ -233,7 +235,7 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
               <button
                 onClick={() => handleMoveStatus(cmp.id, 'Resolved')}
                 className="btn btn-success btn-sm"
-                style={{ flex: 1, fontSize: '0.75rem', padding: '6px 8px' }}
+                style={{ flex: 1, fontSize: '0.75rem', padding: '6px 8px', fontWeight: '700' }}
                 title="Mark ticket as Resolved"
               >
                 <CheckCircle2 size={12} />
@@ -265,8 +267,8 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
             style={{
-              background: 'var(--faculty-light)',
-              color: 'var(--faculty-accent)',
+              background: 'var(--primary-light)',
+              color: 'var(--primary-purple)',
               padding: '8px',
               borderRadius: 'var(--radius-md)',
               display: 'flex',
@@ -280,7 +282,7 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
             <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-main)' }}>
               Campus Care Triage Board
             </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
               Review, assign, and update resolution states for student campus complaints.
             </p>
           </div>
@@ -317,7 +319,7 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
         {/* COLUMN 1: SUBMITTED */}
         <div
           style={{
-            background: 'rgba(241, 245, 249, 0.7)',
+            background: 'var(--bg-card)',
             borderRadius: 'var(--radius-lg)',
             border: '1px solid var(--border-color)',
             padding: '16px',
@@ -327,10 +329,10 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
             minHeight: '400px',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '2px solid #CBD5E1' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid var(--border-color)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#64748B' }}></div>
-              <h4 style={{ fontWeight: '800', fontSize: '0.95rem', color: '#334155' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--text-subtle)' }}></div>
+              <h4 style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-main)', margin: 0 }}>
                 Submitted
               </h4>
             </div>
@@ -338,10 +340,11 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
               style={{
                 fontSize: '0.75rem',
                 fontWeight: '800',
-                background: '#E2E8F0',
-                color: '#475569',
+                background: 'var(--primary-light)',
+                color: 'var(--primary-purple)',
                 padding: '2px 8px',
                 borderRadius: 'var(--radius-full)',
+                border: '1px solid var(--border-color)',
               }}
             >
               {submittedTickets.length}
@@ -362,9 +365,9 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
         {/* COLUMN 2: IN PROGRESS */}
         <div
           style={{
-            background: 'rgba(254, 243, 199, 0.4)',
+            background: 'rgba(245, 158, 11, 0.05)',
             borderRadius: 'var(--radius-lg)',
-            border: '1px solid #FDE68A',
+            border: '1px solid rgba(245, 158, 11, 0.25)',
             padding: '16px',
             display: 'flex',
             flexDirection: 'column',
@@ -372,10 +375,10 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
             minHeight: '400px',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '2px solid #F59E0B' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid rgba(245, 158, 11, 0.25)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#F59E0B' }}></div>
-              <h4 style={{ fontWeight: '800', fontSize: '0.95rem', color: '#92400E' }}>
+              <h4 style={{ fontWeight: '800', fontSize: '0.95rem', color: '#F59E0B', margin: 0 }}>
                 In Progress
               </h4>
             </div>
@@ -383,11 +386,11 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
               style={{
                 fontSize: '0.75rem',
                 fontWeight: '800',
-                background: '#FEF3C7',
-                color: '#B45309',
+                background: 'rgba(245, 158, 11, 0.2)',
+                color: '#F59E0B',
                 padding: '2px 8px',
                 borderRadius: 'var(--radius-full)',
-                border: '1px solid #FDE68A',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
               }}
             >
               {inProgressTickets.length}
@@ -408,9 +411,9 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
         {/* COLUMN 3: RESOLVED */}
         <div
           style={{
-            background: 'rgba(236, 253, 245, 0.5)',
+            background: 'rgba(16, 185, 129, 0.05)',
             borderRadius: 'var(--radius-lg)',
-            border: '1px solid #A7F3D0',
+            border: '1px solid rgba(16, 185, 129, 0.25)',
             padding: '16px',
             display: 'flex',
             flexDirection: 'column',
@@ -418,10 +421,10 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
             minHeight: '400px',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '2px solid #10B981' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '10px', borderBottom: '1px solid rgba(16, 185, 129, 0.25)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10B981' }}></div>
-              <h4 style={{ fontWeight: '800', fontSize: '0.95rem', color: '#065F46' }}>
+              <h4 style={{ fontWeight: '800', fontSize: '0.95rem', color: '#10B981', margin: 0 }}>
                 Resolved
               </h4>
             </div>
@@ -429,11 +432,11 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
               style={{
                 fontSize: '0.75rem',
                 fontWeight: '800',
-                background: '#D1FAE5',
-                color: '#047857',
+                background: 'rgba(16, 185, 129, 0.2)',
+                color: '#10B981',
                 padding: '2px 8px',
                 borderRadius: 'var(--radius-full)',
-                border: '1px solid #A7F3D0',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
               }}
             >
               {resolvedTickets.length}
@@ -450,7 +453,6 @@ export const FacultyKanbanBoard = ({ complaints = [], onStatusUpdate, onRefresh 
             )}
           </div>
         </div>
-
       </div>
     </div>
   );
