@@ -47,8 +47,8 @@ export const StudentLogin = () => {
           <div className="glass-card" style={{ padding: '32px', borderTop: '4px solid var(--student-accent)' }}>
             
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <div style={{ width: 50, height: 50, borderRadius: 'var(--radius-md)', background: 'var(--student-light)', color: 'var(--student-accent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
-                <GraduationCap size={28} />
+              <div style={{ width: 50, height: 50, borderRadius: 'var(--radius-md)', background: 'var(--student-light)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
+                <img src="/coval_logo.png" alt="COVAL Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
               </div>
               <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-main)' }}>Student Login</h1>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Sign in with your official student email address</p>
