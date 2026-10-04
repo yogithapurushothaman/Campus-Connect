@@ -279,6 +279,13 @@ export const FacultyDashboard = () => {
                   🛡️ Student Requests
                 </button>
                 <button 
+                  onClick={() => setActiveTab('clubs')} 
+                  className="btn btn-secondary btn-sm" 
+                  style={{ fontWeight: '700', borderRadius: '9999px', padding: '10px 20px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)', color: '#8B5CF6' }}
+                >
+                  👤 Delegate Access
+                </button>
+                <button 
                   onClick={() => setCreateEventModalOpen(true)} 
                   className="btn btn-primary btn-sm" 
                   style={{ background: 'var(--primary-purple)', fontWeight: '700', borderRadius: '9999px', padding: '10px 20px', boxShadow: '0 6px 18px rgba(139,92,246,0.35)' }}
@@ -412,14 +419,15 @@ export const FacultyDashboard = () => {
           </button>
         </div>
 
-        {/* TAB 1: CAMPUS CARE KANBAN TRIAGE */}
+        {/* TAB 1: CAMPUS CARE KANBAN TRIAGE & DELEGATION */}
         {activeTab === 'complaints' && (
-          <section>
+          <section style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <FacultyKanbanBoard
               complaints={complaints}
               onStatusUpdate={handleStatusUpdated}
               onRefresh={loadData}
             />
+            <DelegateClubAccessCard clubs={clubs} onAccessGranted={loadData} />
           </section>
         )}
 

@@ -90,7 +90,9 @@ export const MasterAppShell = ({
 
   const facultyNavItems = [
     { id: 'complaints', label: 'Student Requests', icon: ShieldCheck },
+    { id: 'clubs', label: 'Delegate Club Access', icon: UserCheck },
     { id: 'events', label: 'Manage Events', icon: Calendar },
+    { id: 'notices', label: 'Post Notice', icon: Send },
     { id: 'heatmap', label: 'Campus Heatmap', icon: MapPin },
     { id: 'moderation', label: 'Moderation Queue', icon: ShieldAlert },
   ];
