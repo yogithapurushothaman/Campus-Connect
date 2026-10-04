@@ -47,7 +47,15 @@ def create_event():
     scope = data.get("scope", "INTERNAL").strip().upper()
     if scope not in ("INTERNAL", "EXTERNAL"):
         scope = "INTERNAL"
-    venue = data.get("venue", "").strip() or data.get("locationName", "Main Campus").strip()
+    
+    external_link = data.get("externalLink", "").strip()
+    host_institution = data.get("hostInstitution", "").strip()
+    
+    if scope == "EXTERNAL":
+        venue = host_institution or data.get("venue", "External Host").strip()
+    else:
+        venue = data.get("venue", "").strip() or data.get("locationName", "Main Campus").strip()
+        
     department = data.get("department", g.session.get("department", "General")).strip()
     capacity = int(data.get("capacity", 150))
     banner_image = data.get("bannerImage", "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80")
@@ -62,6 +70,8 @@ def create_event():
         date=date,
         category=category,
         scope=scope,
+        external_link=external_link,
+        host_institution=host_institution,
         location_name=venue,
         venue=venue,
         department=department,
@@ -77,6 +87,11 @@ def create_event():
         "message": "Event published successfully.",
         "event": new_event.to_dict()
     }), 201
+
+@faculty_events_bp.route("", methods=["POST"])
+@login_required
+def create_faculty_event():
+    return create_event()
 
 @events_bp.route("/<event_id>/rsvp", methods=["POST"])
 @login_required

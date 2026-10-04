@@ -32,6 +32,14 @@ def init_database():
     except Exception:
         session.rollback()
 
+    try:
+        from sqlalchemy import text
+        session.execute(text("ALTER TABLE events ADD COLUMN external_link VARCHAR(500) DEFAULT ''"))
+        session.execute(text("ALTER TABLE events ADD COLUMN host_institution VARCHAR(200) DEFAULT ''"))
+        session.commit()
+    except Exception:
+        session.rollback()
+
     # Check if data already seeded
     existing_faculty = session.query(User).filter_by(email="prof.vikram@college.edu").first()
     if existing_faculty:

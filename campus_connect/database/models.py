@@ -82,6 +82,8 @@ class Event(Base):
     department = Column(String(100), default="General")
     capacity = Column(Integer, default=150)
     scope = Column(String(20), default=EventScope.INTERNAL.value, nullable=False)
+    external_link = Column(String(500), default="")
+    host_institution = Column(String(200), default="")
     banner_image = Column(String(255), default="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80")
     is_official = Column(Boolean, default=True)
     author_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
@@ -105,6 +107,8 @@ class Event(Base):
             "department": self.department,
             "capacity": self.capacity or 150,
             "scope": self.scope or "INTERNAL",
+            "externalLink": self.external_link or "",
+            "hostInstitution": self.host_institution or "",
             "registrationCount": reg_count,
             "bannerImage": self.banner_image,
             "isOfficial": self.is_official,

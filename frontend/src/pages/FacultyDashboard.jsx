@@ -6,6 +6,7 @@ import { AdminHeatmap } from '../components/AdminHeatmap';
 import { FloatingNexus3D } from '../components/FloatingNexus3D';
 import { SegmentedToggle } from '../components/SegmentedToggle';
 import { EventAnalyticsModal } from '../components/EventAnalyticsModal';
+import { CreateEventModal } from '../components/CreateEventModal';
 import {
   Briefcase,
   Plus,
@@ -37,6 +38,7 @@ export const FacultyDashboard = () => {
   const [complaints, setComplaints] = useState([]);
   const [reports, setReports] = useState([]);
   const [selectedEventForAnalytics, setSelectedEventForAnalytics] = useState(null);
+  const [createEventModalOpen, setCreateEventModalOpen] = useState(false);
 
   // New Event Form State
   const [evTitle, setEvTitle] = useState('');
@@ -272,7 +274,7 @@ export const FacultyDashboard = () => {
                   🛡️ Campus Care
                 </button>
                 <button 
-                  onClick={() => setActiveTab('events')} 
+                  onClick={() => setCreateEventModalOpen(true)} 
                   className="btn btn-primary btn-sm" 
                   style={{ background: 'var(--primary-purple)', fontWeight: '700', borderRadius: '9999px', padding: '10px 20px', boxShadow: '0 6px 18px rgba(139,92,246,0.35)' }}
                 >
@@ -471,6 +473,14 @@ export const FacultyDashboard = () => {
                     Track live student registrations, view department breakdown analytics, and download official attendance rosters.
                   </p>
                 </div>
+                <button
+                  onClick={() => setCreateEventModalOpen(true)}
+                  className="btn btn-primary btn-sm"
+                  style={{ background: 'var(--primary-purple)', fontWeight: '800', borderRadius: '12px', padding: '10px 20px', boxShadow: '0 6px 18px rgba(139,92,246,0.35)', display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Plus size={16} />
+                  <span>+ Create Event</span>
+                </button>
               </div>
 
               {events.length === 0 ? (
@@ -805,6 +815,16 @@ export const FacultyDashboard = () => {
             {toastMsg}
           </div>
         )}
+
+        {/* Create Event Modal */}
+        <CreateEventModal
+          isOpen={createEventModalOpen}
+          onClose={() => setCreateEventModalOpen(false)}
+          onSubmitSuccess={(newEvent) => {
+            setEvents((prev) => [newEvent, ...prev]);
+            showToast('🎓 Official Event published successfully to all students!');
+          }}
+        />
 
         {/* Event Analytics Modal */}
         {selectedEventForAnalytics && (
