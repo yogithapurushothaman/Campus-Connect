@@ -47,6 +47,28 @@ class User(Base):
 
     def to_dict(self):
         role_display = "FACULTY" if self.role in ("FACULTY", "STAFF") else "STUDENT"
+        
+        # Resolve active club delegation & role for student user
+        club_name = ""
+        club_role = ""
+        try:
+            from campus_connect.database.session import db_session
+            from campus_connect.database.models import Club, ClubDelegation
+            session = db_session()
+            delegation = session.query(ClubDelegation).filter(
+                (ClubDelegation.student_id == self.id) | (ClubDelegation.student_email.ilike(self.email))
+            ).first()
+            if delegation:
+                club_name = delegation.club_name
+                club_role = delegation.role
+            else:
+                lead_club = session.query(Club).filter(Club.lead_email.ilike(self.email)).first()
+                if lead_club:
+                    club_name = lead_club.name
+                    club_role = "President"
+        except Exception:
+            pass
+
         return {
             "id": self.id,
             "name": self.name,
@@ -62,6 +84,10 @@ class User(Base):
             "karmaPoints": self.karma_points,
             "reliabilityScore": self.reliability_score,
             "isVerified": self.is_verified,
+            "club_name": club_name,
+            "clubName": club_name,
+            "club_role": club_role,
+            "clubRole": club_role,
             "createdAt": self.created_at.isoformat() if self.created_at else None,
         }
 
@@ -87,6 +113,8 @@ class Event(Base):
     banner_image = Column(String(255), default="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80")
     is_official = Column(Boolean, default=True)
     author_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    club_name = Column(String(100), default="")
+    club_id = Column(String(36), ForeignKey("clubs.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, default=utc_now)
     updated_at = Column(DateTime, default=utc_now, onupdate=utc_now)
 
@@ -113,6 +141,8 @@ class Event(Base):
             "bannerImage": self.banner_image,
             "isOfficial": self.is_official,
             "authorId": self.author_id,
+            "clubName": self.club_name or "",
+            "clubId": self.club_id or "",
             "author": {
                 "id": self.author.id,
                 "name": self.author.name,

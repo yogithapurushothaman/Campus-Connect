@@ -20,7 +20,9 @@ import {
   X,
   User,
   Sparkles,
-  AlertTriangle
+  AlertTriangle,
+  UserCheck,
+  Send
 } from 'lucide-react';
 
 export const MasterAppShell = ({

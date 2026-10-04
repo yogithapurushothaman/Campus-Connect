@@ -240,6 +240,54 @@ def grant_club_access():
         "delegation": delegation.to_dict()
     }), 200
 
+@clubs_bp.route("/my-delegations", methods=["GET"])
+@login_required
+def get_my_delegations():
+    from campus_connect.database.models import Club, ClubDelegation
+    user_id = g.session["id"]
+    user_email = g.session.get("email", "").strip().lower()
+
+    session = db_session()
+
+    delegations = session.query(ClubDelegation).filter(
+        (ClubDelegation.student_id == user_id) | (ClubDelegation.student_email.ilike(user_email))
+    ).all()
+    
+    lead_clubs = session.query(Club).filter(Club.lead_email.ilike(user_email)).all()
+
+    delegated_clubs = []
+    is_president = False
+
+    for d in delegations:
+        role_str = d.role or "Event Coordinator"
+        delegated_clubs.append({
+            "clubName": d.club_name,
+            "role": role_str,
+            "grantedAt": d.created_at.isoformat() if d.created_at else None
+        })
+        if role_str.lower() in ("president", "lead", "club lead", "head", "club president"):
+            is_president = True
+
+    for c in lead_clubs:
+        if not any(dc["clubName"].lower() == c.name.lower() for dc in delegated_clubs):
+            delegated_clubs.append({
+                "clubName": c.name,
+                "role": "President",
+                "grantedAt": None
+            })
+        is_president = True
+
+    is_faculty_or_staff = g.session.get("role", "").upper() in ("FACULTY", "STAFF")
+    is_delegated = len(delegated_clubs) > 0 or is_faculty_or_staff
+
+    return jsonify({
+        "isDelegated": is_delegated,
+        "isPresident": is_president,
+        "canPostExternal": is_delegated,
+        "canPostInternal": is_delegated,
+        "delegatedClubs": delegated_clubs
+    }), 200
+
 @faculty_clubs_bp.route("/delegations", methods=["GET"])
 @login_required
 def get_faculty_delegations():
@@ -247,5 +295,6 @@ def get_faculty_delegations():
     session = db_session()
     delegations = session.query(ClubDelegation).order_by(ClubDelegation.created_at.desc()).all()
     return jsonify({"delegations": [d.to_dict() for d in delegations]}), 200
+
 
 

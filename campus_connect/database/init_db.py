@@ -42,6 +42,14 @@ def init_database():
 
     try:
         from sqlalchemy import text
+        session.execute(text("ALTER TABLE events ADD COLUMN club_name VARCHAR(100) DEFAULT ''"))
+        session.execute(text("ALTER TABLE events ADD COLUMN club_id VARCHAR(36)"))
+        session.commit()
+    except Exception:
+        session.rollback()
+
+    try:
+        from sqlalchemy import text
         session.execute(text("ALTER TABLE team_requests ADD COLUMN scope VARCHAR(20) DEFAULT 'INTERNAL'"))
         session.commit()
     except Exception:

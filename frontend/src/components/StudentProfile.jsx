@@ -66,6 +66,11 @@ export const StudentProfile = () => {
               <ShieldCheck size={14} />
               Verified Student ✅
             </span>
+            {((user?.club_name && user?.club_role) || (user?.clubName && user?.clubRole)) && (
+              <span style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#8B5CF6', border: '1px solid rgba(139, 92, 246, 0.35)', display: 'inline-flex', alignItems: 'center', gap: '4px', fontWeight: '800', padding: '4px 12px', borderRadius: '9999px', fontSize: '0.75rem' }}>
+                👑 Club: {user.club_name || user.clubName} {user.club_role || user.clubRole}
+              </span>
+            )}
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: '6px 0 10px 0', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Mail size={14} />

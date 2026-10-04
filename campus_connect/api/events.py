@@ -34,9 +34,24 @@ def get_hackathons_alias():
 @login_required
 def create_event():
     user_role = g.session.get("role", "STUDENT").upper()
-    if user_role not in ("FACULTY", "STAFF"):
+    user_id = g.session.get("id")
+    user_email = g.session.get("email", "").strip().lower()
+
+    session = db_session()
+    is_faculty = user_role in ("FACULTY", "STAFF")
+
+    from campus_connect.database.models import Club, ClubDelegation
+    delegations = session.query(ClubDelegation).filter(
+        (ClubDelegation.student_id == user_id) | (ClubDelegation.student_email.ilike(user_email))
+    ).all()
+    lead_clubs = session.query(Club).filter(Club.lead_email.ilike(user_email)).all()
+
+    delegated_club_names = [d.club_name for d in delegations] + [c.name for c in lead_clubs]
+    is_delegated_student = len(delegated_club_names) > 0
+
+    if not is_faculty and not is_delegated_student:
         return jsonify({
-            "error": "Forbidden: Only faculty and staff members are authorized to create official campus events."
+            "error": "Forbidden: Only faculty advisors or delegated student club admins can publish events."
         }), 403
 
     data = request.get_json() or {}
@@ -48,6 +63,22 @@ def create_event():
     if scope not in ("INTERNAL", "EXTERNAL"):
         scope = "INTERNAL"
     
+    club_name = data.get("clubName", "").strip() or data.get("club", "").strip()
+
+    if not is_faculty:
+        if scope == "INTERNAL":
+            if club_name:
+                match = any(cname.lower() in club_name.lower() or club_name.lower() in cname.lower() for cname in delegated_club_names)
+                if not match:
+                    return jsonify({
+                        "error": f"Forbidden: You do not have admin access to publish events for '{club_name}'."
+                    }), 403
+            else:
+                club_name = delegated_club_names[0]
+        elif scope == "EXTERNAL":
+            if not club_name and delegated_club_names:
+                club_name = delegated_club_names[0]
+
     external_link = data.get("externalLink", "").strip()
     host_institution = data.get("hostInstitution", "").strip()
     
@@ -63,7 +94,10 @@ def create_event():
     if not title or not description or not date:
         return jsonify({"error": "Title, description, and date are required."}), 400
 
-    session = db_session()
+    target_club = None
+    if club_name:
+        target_club = session.query(Club).filter((Club.name.ilike(f"%{club_name}%")) | (Club.id == club_name)).first()
+
     new_event = Event(
         title=title,
         description=description,
@@ -78,7 +112,9 @@ def create_event():
         capacity=capacity,
         banner_image=banner_image,
         is_official=True,
-        author_id=g.session["id"]
+        author_id=user_id,
+        club_name=target_club.name if target_club else club_name,
+        club_id=target_club.id if target_club else None
     )
     session.add(new_event)
     session.commit()

@@ -45,6 +45,28 @@ export const StudentDashboard = () => {
   const [complaintsLoading, setComplaintsLoading] = useState(false);
   const [rsvpedEvents, setRsvpedEvents] = useState(new Set());
 
+  // Delegated Student Admin State
+  const [myDelegations, setMyDelegations] = useState({
+    isDelegated: false,
+    isPresident: false,
+    canPostExternal: false,
+    canPostInternal: false,
+    delegatedClubs: []
+  });
+  const [showClubPublisherModal, setShowClubPublisherModal] = useState(false);
+
+  // Form state for student club admin event publisher
+  const [pubTitle, setPubTitle] = useState('');
+  const [pubCategory, setPubCategory] = useState('Hackathon');
+  const [pubScope, setPubScope] = useState('INTERNAL');
+  const [pubClubName, setPubClubName] = useState('');
+  const [pubDate, setPubDate] = useState('Dec 20, 2026 • 10:00 AM');
+  const [pubLocation, setPubLocation] = useState('Alan Turing Computer Science Block');
+  const [pubCapacity, setPubCapacity] = useState(150);
+  const [pubExternalLink, setPubExternalLink] = useState('');
+  const [pubHostInst, setPubHostInst] = useState('');
+  const [pubDesc, setPubDesc] = useState('');
+
   const loadEventsByScope = async (scope) => {
     try {
       const [evRes, teamRes] = await Promise.all([
@@ -170,7 +192,7 @@ export const StudentDashboard = () => {
     // Fetch initial data from Python backend
     const loadData = async () => {
       try {
-        const [actRes, evRes, cmpRes, ntcRes, teamRes, clubsRes, notifRes] = await Promise.all([
+        const [actRes, evRes, cmpRes, ntcRes, teamRes, clubsRes, notifRes, delRes] = await Promise.all([
           authFetch('/api/activities'),
           authFetch(`/api/events?scope=${eventScope}`),
           authFetch('/api/complaints/me'),
@@ -178,6 +200,7 @@ export const StudentDashboard = () => {
           authFetch('/api/team-requests'),
           authFetch('/api/clubs'),
           authFetch('/api/notifications'),
+          authFetch('/api/clubs/my-delegations'),
         ]);
 
         if (actRes.ok) {
@@ -208,6 +231,13 @@ export const StudentDashboard = () => {
           const d = await notifRes.json();
           setNotifications(d.notifications || []);
         }
+        if (delRes.ok) {
+          const d = await delRes.json();
+          setMyDelegations(d);
+          if (d.delegatedClubs && d.delegatedClubs.length > 0) {
+            setPubClubName(d.delegatedClubs[0].clubName);
+          }
+        }
       } catch (err) {
         console.error('Data load error:', err);
       }
@@ -219,6 +249,50 @@ export const StudentDashboard = () => {
     const interval = setInterval(loadNotifications, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  const handlePublishClubEvent = async (e) => {
+    e.preventDefault();
+    if (!pubTitle.trim() || !pubDesc.trim()) {
+      showToast('⚠️ Title and description are required.');
+      return;
+    }
+    try {
+      const res = await authFetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: pubTitle,
+          description: pubDesc,
+          date: pubDate,
+          category: pubCategory,
+          scope: pubScope,
+          clubName: pubClubName,
+          venue: pubScope === 'EXTERNAL' ? pubHostInst || 'External Host' : pubLocation,
+          locationName: pubScope === 'EXTERNAL' ? pubHostInst || 'External Host' : pubLocation,
+          capacity: pubScope === 'EXTERNAL' ? 1000 : Number(pubCapacity),
+          externalLink: pubExternalLink,
+          hostInstitution: pubHostInst,
+        }),
+      });
+
+      if (res.ok) {
+        showToast(
+          pubScope === 'EXTERNAL'
+            ? '🌐 Outside Event / Hackathon published successfully!'
+            : `🎓 Official Club Event published for ${pubClubName}!`
+        );
+        setPubTitle('');
+        setPubDesc('');
+        setShowClubPublisherModal(false);
+        loadEventsByScope(eventScope);
+      } else {
+        const err = await res.json();
+        showToast(err.error || 'Failed to publish club event.');
+      }
+    } catch (err) {
+      showToast('Error publishing club event.');
+    }
+  };
 
   const handleRSVP = async (eventTitle, eventId) => {
     try {
@@ -402,9 +476,18 @@ export const StudentDashboard = () => {
                 <p style={{ fontSize: '1.05rem', fontWeight: '500', color: 'var(--text-muted)', margin: '14px 0 0 0', lineHeight: '1.55', maxWidth: '520px' }}>
                   Welcome back, {user?.name?.split(' ')[0] || 'Student'} 👋. Welcome to the COVAL Nexus. A new era of student life and digital connectivity.
                 </p>
+
+                {/* 1. RECOGNITION BADGE (Club: {user.club_name} {user.club_role}) */}
+                {((user?.club_name && user?.club_role) || (user?.clubName && user?.clubRole) || (myDelegations?.delegatedClubs?.length > 0)) && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '12px', padding: '6px 16px', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(109, 40, 217, 0.25) 100%)', border: '1px solid rgba(139, 92, 246, 0.35)', borderRadius: '9999px', boxShadow: '0 2px 10px rgba(139, 92, 246, 0.15)' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#8B5CF6', letterSpacing: '0.02em' }}>
+                      👑 Club: {user?.club_name || user?.clubName || myDelegations?.delegatedClubs[0]?.clubName} {user?.club_role || user?.clubRole || myDelegations?.delegatedClubs[0]?.role}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              {/* DUAL PILL TOGGLE + QUICK ACTION BUTTONS */}
+              {/* DUAL PILL TOGGLE + QUICK ACTION CREATION BUTTONS */}
               <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap', marginTop: '8px' }}>
                 <SegmentedToggle
                   options={[
@@ -415,7 +498,7 @@ export const StudentDashboard = () => {
                   onChange={(id) => setDashboardTab(id)}
                 />
 
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                   <button 
                     onClick={() => { setActiveView('campus_care'); setActiveTab('complaints'); }} 
                     className="btn btn-secondary btn-sm" 
@@ -430,6 +513,33 @@ export const StudentDashboard = () => {
                   >
                     + Find Squad
                   </button>
+
+                  {/* 2. CONDITIONALLY RENDERED CREATION BUTTONS FOR DELEGATED CLUB USERS */}
+                  {(user?.club_role || user?.club_name || user?.clubRole || myDelegations?.isDelegated) && (
+                    <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <button 
+                        onClick={() => { setPubCategory('Event'); setShowClubPublisherModal(true); }} 
+                        className="btn btn-primary btn-sm" 
+                        style={{ background: 'var(--primary-purple)', fontWeight: '800', borderRadius: '9999px', padding: '10px 18px', boxShadow: '0 6px 18px rgba(139,92,246,0.35)' }}
+                      >
+                        + Post Event
+                      </button>
+                      <button 
+                        onClick={() => { setPubCategory('Hackathon'); setShowClubPublisherModal(true); }} 
+                        className="btn btn-primary btn-sm" 
+                        style={{ background: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)', fontWeight: '800', borderRadius: '9999px', padding: '10px 18px', boxShadow: '0 6px 18px rgba(139,92,246,0.35)' }}
+                      >
+                        + Add Hackathon
+                      </button>
+                      <button 
+                        onClick={() => { setPubCategory('Workshop'); setShowClubPublisherModal(true); }} 
+                        className="btn btn-secondary btn-sm" 
+                        style={{ fontWeight: '800', borderRadius: '9999px', padding: '10px 18px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}
+                      >
+                        + Add Workshop
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -616,6 +726,15 @@ export const StudentDashboard = () => {
                       activeId={eventScope}
                       onChange={handleScopeChange}
                     />
+                    {myDelegations.isDelegated && (
+                      <button 
+                        onClick={() => setShowClubPublisherModal(true)} 
+                        className="btn btn-primary btn-sm" 
+                        style={{ background: 'var(--primary-purple)', fontSize: '0.75rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        <Plus size={14} /> 👑 Publish Event
+                      </button>
+                    )}
                     <button 
                       onClick={() => setActiveView('events')} 
                       style={{ background: 'none', border: 'none', color: 'var(--primary-purple)', fontWeight: '700', fontSize: '0.825rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
@@ -1013,6 +1132,169 @@ export const StudentDashboard = () => {
             </div>
 
           </div>
+
+          {/* CLUB ADMIN EVENT PUBLISHER WIDGET MODAL */}
+          {showClubPublisherModal && (
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+              <div className="glass-card shadow-lg" style={{ background: '#FAF8F5', width: '100%', maxWidth: '640px', padding: '28px', borderRadius: '24px', border: '1px solid var(--border-color)', position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
+                
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
+                  <div>
+                    <span style={{ fontSize: '0.72rem', fontWeight: '800', color: '#8B5CF6', background: 'rgba(139, 92, 246, 0.12)', border: '1px solid rgba(139, 92, 246, 0.25)', padding: '4px 12px', borderRadius: '9999px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      👑 Delegated Student Club Admin
+                    </span>
+                    <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--text-main)', margin: '8px 0 2px 0' }}>
+                      Publish Club Event, Hackathon or Workshop
+                    </h3>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
+                      {myDelegations.isPresident 
+                        ? 'As a Student President, you can publish internal events for your assigned club or outside competitions.' 
+                        : 'As a Delegated Club Admin, you can publish outside events and hackathons for students.'}
+                    </p>
+                  </div>
+                  <button onClick={() => setShowClubPublisherModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: 'var(--text-muted)' }}>✕</button>
+                </div>
+
+                {/* Scope Selector */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+                  <SegmentedToggle
+                    options={[
+                      { id: 'INTERNAL', label: '🏫 Internal Club Event' },
+                      { id: 'EXTERNAL', label: '🌐 Outside Event / Hackathon' }
+                    ]}
+                    activeId={pubScope}
+                    onChange={(id) => setPubScope(id)}
+                  />
+                </div>
+
+                <form onSubmit={handlePublishClubEvent} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  
+                  {/* Select Club Name */}
+                  {myDelegations.delegatedClubs?.length > 0 && (
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontWeight: '700' }}>Your Delegated Club:</label>
+                      <select value={pubClubName} onChange={(e) => setPubClubName(e.target.value)} className="form-select">
+                        {myDelegations.delegatedClubs.map((dc, idx) => (
+                          <option key={idx} value={dc.clubName}>
+                            {dc.clubName} ({dc.role})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: '700' }}>Event / Competition Title:</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. ACM Winter CodeSprint Hackathon 2026"
+                      value={pubTitle}
+                      onChange={(e) => setPubTitle(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontWeight: '700' }}>Category:</label>
+                      <select value={pubCategory} onChange={(e) => setPubCategory(e.target.value)} className="form-select">
+                        <option value="Hackathon">Hackathon</option>
+                        <option value="Workshop">Workshop</option>
+                        <option value="Seminar">Seminar</option>
+                        <option value="Cultural Fest">Cultural Fest</option>
+                        <option value="Others">Others</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label" style={{ fontWeight: '700' }}>Date & Time:</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={pubDate}
+                        onChange={(e) => setPubDate(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dynamic Fields for Internal vs External Scope */}
+                  {pubScope === 'INTERNAL' ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', padding: '14px', background: 'rgba(139, 92, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: '700' }}>Campus Venue:</label>
+                        <select value={pubLocation} onChange={(e) => setPubLocation(e.target.value)} className="form-select">
+                          <option value="Alan Turing Computer Science Block">Alan Turing Computer Science Block</option>
+                          <option value="Main Campus Auditorium">Main Campus Auditorium</option>
+                          <option value="Central Library Digital Sandbox">Central Library Digital Sandbox</option>
+                          <option value="Tech Park Seminar Hall 302">Tech Park Seminar Hall 302</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: '700' }}>Capacity:</label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={pubCapacity}
+                          onChange={(e) => setPubCapacity(e.target.value)}
+                          min="10"
+                          max="10000"
+                          required
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', padding: '14px', background: 'rgba(139, 92, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: '700' }}>External Registration Link:</label>
+                        <input
+                          type="url"
+                          className="form-input"
+                          placeholder="https://devfolio.co/hackathon"
+                          value={pubExternalLink}
+                          onChange={(e) => setPubExternalLink(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label" style={{ fontWeight: '700' }}>Host Institution:</label>
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="e.g. IIT Madras / IEEE Student Branch"
+                          value={pubHostInst}
+                          onChange={(e) => setPubHostInst(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: '700' }}>Description:</label>
+                    <textarea
+                      className="form-textarea"
+                      rows="3"
+                      placeholder="Provide event details, rules, eligibility..."
+                      value={pubDesc}
+                      onChange={(e) => setPubDesc(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                    <button type="button" onClick={() => setShowClubPublisherModal(false)} className="btn btn-secondary" style={{ flex: 1 }}>
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn btn-primary" style={{ flex: 2, background: 'var(--primary-purple)', fontWeight: '800' }}>
+                      ✨ Publish Event Now
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
 
           {/* Floating Toast */}
           {toastMsg && (
