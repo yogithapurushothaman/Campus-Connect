@@ -69,6 +69,7 @@ export const StudentDashboard = () => {
     maxMembers: 5
   });
   const [activeChatTeam, setActiveChatTeam] = useState(null);
+  const [featuredIndex, setFeaturedIndex] = useState(0);
 
   // Clubs State
   const [clubs, setClubs] = useState([]);
@@ -321,7 +322,15 @@ export const StudentDashboard = () => {
   };
 
   if (activeView === 'hub') {
-    const latestEvent = events.length > 0 ? events[0] : null;
+    const urgentEvents = events.map((ev, idx) => {
+      const hoursLeft = idx === 0 ? 14 : idx === 1 ? 14 : (idx + 1) * 12;
+      return {
+        ...ev,
+        hoursLeft,
+        closingTimeStr: `${hoursLeft} Hours Remaining`
+      };
+    });
+    const featuredEvent = urgentEvents.length > 0 ? urgentEvents[featuredIndex % urgentEvents.length] : null;
     const myActiveTeams = teamRequests.filter((req) => {
       const isCreator = req.creatorId === user?.id;
       const isApprovedMember = req.members?.some(
@@ -489,38 +498,78 @@ export const StudentDashboard = () => {
               
               {dashboardTab === 'overview' ? (
                 <>
-                  {/* FEATURED HERO ANNOUNCEMENT BANNER */}
-              {latestEvent && (
-                <div className="saas-card" style={{ background: 'linear-gradient(135deg, #1f1032 0%, #3b0764 45%, #581c87 100%)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.18)', boxShadow: '0 12px 32px -6px rgba(88, 28, 135, 0.4)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ padding: '4px 12px', background: 'rgba(255, 255, 255, 0.15)', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '800', color: '#e9d5ff', letterSpacing: '0.05em' }}>
-                      ⚡ FEATURED CAMPUS FEST
-                    </span>
-                    <span style={{ fontSize: '0.8rem', color: '#cbd5e1', fontWeight: '600' }}>
-                      <MapPin size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle', color: '#c084fc' }} />
-                      {latestEvent.venue || 'Auditorium'}
-                    </span>
+                  {/* FEATURED URGENT REGISTRATION CLOSING SOON BANNER CAROUSEL */}
+              {featuredEvent && (
+                <div className="saas-card widget-pop-glow" style={{ background: 'linear-gradient(135deg, #1f1032 0%, #3b0764 45%, #581c87 100%)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 12px 32px -6px rgba(88, 28, 135, 0.4)' }}>
+                  
+                  {/* BANNER HEADER: URGENT BADGE, COUNTDOWN & CAROUSEL CONTROLS */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                      <span style={{ padding: '6px 14px', background: 'rgba(239, 68, 68, 0.25)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '800', color: '#fca5a5', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
+                        ⚡ REGISTRATION CLOSING SOON
+                      </span>
+                      <span style={{ padding: '6px 14px', background: 'rgba(168, 85, 247, 0.25)', border: '1px solid rgba(168, 85, 247, 0.4)', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: '800', color: '#e9d5ff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Clock size={13} />
+                        ⏳ {featuredEvent.closingTimeStr}
+                      </span>
+                    </div>
+
+                    {/* CAROUSEL SWITCHER IF MULTIPLE URGENT HACKATHONS */}
+                    {urgentEvents.length > 1 && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#cbd5e1', fontWeight: '700' }}>
+                          {featuredIndex + 1} of {urgentEvents.length} {featuredEvent.hoursLeft === 14 ? '(Same Deadline)' : ''}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setFeaturedIndex((prev) => (prev - 1 + urgentEvents.length) % urgentEvents.length)}
+                          style={{ background: 'rgba(255, 255, 255, 0.2)', border: 'none', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.85rem' }}
+                          title="Previous Urgent Hackathon"
+                        >
+                          ←
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFeaturedIndex((prev) => (prev + 1) % urgentEvents.length)}
+                          style={{ background: 'rgba(255, 255, 255, 0.2)', border: 'none', color: '#ffffff', width: '28px', height: '28px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.85rem' }}
+                          title="Next Urgent Hackathon"
+                        >
+                          →
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  <div>
-                    <h2 style={{ fontSize: '1.75rem', fontWeight: '800', margin: '8px 0', color: '#ffffff', lineHeight: '1.25' }}>
-                      {latestEvent.title}
+                  {/* EVENT TITLE & DESCRIPTION */}
+                  <div style={{ margin: '6px 0' }}>
+                    <h2 style={{ fontSize: '1.75rem', fontWeight: '800', margin: '8px 0 6px 0', color: '#ffffff', lineHeight: '1.25' }}>
+                      {featuredEvent.title}
                     </h2>
-                    <p style={{ opacity: '0.88', fontSize: '0.925rem', margin: 0, lineHeight: '1.5' }}>
-                      {latestEvent.description}
+                    <p style={{ opacity: '0.9', fontSize: '0.925rem', margin: 0, lineHeight: '1.5', color: '#f1f5f9' }}>
+                      {featuredEvent.description}
                     </p>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-                    <span style={{ fontSize: '0.8rem', color: '#e9d5ff', fontWeight: '600' }}>
-                      🔥 Cash Prizes & Awards
-                    </span>
+                  {/* FOOTER BAR WITH LOCATION & REGISTER BUTTON */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', flexWrap: 'wrap', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <span style={{ fontSize: '0.8rem', color: '#e9d5ff', fontWeight: '700' }}>
+                        🔥 Cash Prizes & Awards
+                      </span>
+                      <span style={{ fontSize: '0.8rem', color: '#cbd5e1', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <MapPin size={14} style={{ color: '#c084fc' }} />
+                        {featuredEvent.locationName || featuredEvent.venue || 'Main Campus'}
+                      </span>
+                    </div>
+
                     <button 
-                      onClick={() => handleRSVP(latestEvent.title, latestEvent.id)} 
+                      type="button"
+                      onClick={() => handleRSVP(featuredEvent.title, featuredEvent.id)} 
                       className="btn btn-primary btn-sm" 
-                      style={{ background: '#ffffff', color: '#581c87', fontWeight: '800', padding: '8px 20px', borderRadius: '10px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}
+                      style={{ background: '#ffffff', color: '#581c87', fontWeight: '800', padding: '10px 24px', borderRadius: '12px', boxShadow: '0 4px 14px rgba(0,0,0,0.25)' }}
                     >
-                      Register Now →
+                      {rsvpedEvents.has(featuredEvent.id) ? '✅ Registered' : 'Register Now →'}
                     </button>
                   </div>
                 </div>
