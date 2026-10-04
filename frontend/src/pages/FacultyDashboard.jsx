@@ -48,6 +48,8 @@ export const FacultyDashboard = () => {
   const [evScope, setEvScope] = useState('INTERNAL');
   const [evLocation, setEvLocation] = useState('Alan Turing Computer Science Block');
   const [evCapacity, setEvCapacity] = useState(150);
+  const [evExternalLink, setEvExternalLink] = useState('');
+  const [evHostInstitution, setEvHostInstitution] = useState('');
 
   // New Notice Form State
   const [noticeTitle, setNoticeTitle] = useState('');
@@ -162,9 +164,11 @@ export const FacultyDashboard = () => {
           date: evDate,
           category: evCategory,
           scope: evScope,
-          venue: evLocation,
-          locationName: evLocation,
-          capacity: evCapacity,
+          venue: evScope === 'EXTERNAL' ? evHostInstitution || 'External Host' : evLocation,
+          locationName: evScope === 'EXTERNAL' ? evHostInstitution || 'External Host' : evLocation,
+          capacity: evScope === 'EXTERNAL' ? 1000 : Number(evCapacity),
+          externalLink: evExternalLink,
+          hostInstitution: evHostInstitution,
         }),
       });
 
@@ -640,21 +644,35 @@ export const FacultyDashboard = () => {
             <div className="glass-card" style={{ maxWidth: '640px', margin: '0 auto', width: '100%', padding: '24px' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Plus size={18} style={{ color: 'var(--faculty-accent)' }} />
-                <span>Publish New Official Campus Event</span>
+                <span>Publish New Official Event</span>
               </h3>
-              <form onSubmit={handleCreateEvent}>
+
+              {/* Scope Split Flow Pill Toggle */}
+              <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+                <SegmentedToggle
+                  options={[
+                    { id: 'INTERNAL', label: '🏫 Internal Campus Event' },
+                    { id: 'EXTERNAL', label: '🌐 External Opportunity' }
+                  ]}
+                  activeId={evScope}
+                  onChange={(id) => setEvScope(id)}
+                />
+              </div>
+
+              <form onSubmit={handleCreateEvent} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div className="form-group">
                   <label className="form-label">Event Title:</label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="e.g. SRM CSE Department: Annual Tech Hackathon"
+                    placeholder="e.g. SRM National AI & Cloud Hackathon 2026"
                     value={evTitle}
                     onChange={(e) => setEvTitle(e.target.value)}
                     required
                   />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                   <div className="form-group">
                     <label className="form-label">Category:</label>
                     <select value={evCategory} onChange={(e) => setEvCategory(e.target.value)} className="form-select">
@@ -662,61 +680,94 @@ export const FacultyDashboard = () => {
                       <option value="Workshop">Workshop</option>
                       <option value="Seminar">Seminar</option>
                       <option value="Cultural Fest">Cultural Fest</option>
+                      <option value="Others">Others</option>
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Scope:</label>
-                    <select value={evScope} onChange={(e) => setEvScope(e.target.value)} className="form-select">
-                      <option value="INTERNAL">🏫 Campus Only</option>
-                      <option value="EXTERNAL">🌐 External / National</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Max Capacity:</label>
+                    <label className="form-label">Date & Time:</label>
                     <input
-                      type="number"
+                      type="text"
                       className="form-input"
-                      value={evCapacity}
-                      onChange={(e) => setEvCapacity(e.target.value)}
-                      min="10"
-                      max="10000"
+                      value={evDate}
+                      onChange={(e) => setEvDate(e.target.value)}
                       required
                     />
                   </div>
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Date & Time:</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={evDate}
-                    onChange={(e) => setEvDate(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Venue / Location:</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={evLocation}
-                    onChange={(e) => setEvLocation(e.target.value)}
-                    required
-                  />
-                </div>
+
+                {/* DYNAMIC FORM FIELDS BASED ON SCOPE */}
+                {evScope === 'INTERNAL' ? (
+                  /* INTERNAL CAMPUS EVENT FIELDS */
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', padding: '14px', background: 'rgba(139, 92, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
+                    <div className="form-group">
+                      <label className="form-label">Physical Campus Venue:</label>
+                      <select
+                        value={evLocation}
+                        onChange={(e) => setEvLocation(e.target.value)}
+                        className="form-select"
+                      >
+                        <option value="Alan Turing Computer Science Block">Alan Turing Computer Science Block</option>
+                        <option value="Main Campus Auditorium">Main Campus Auditorium</option>
+                        <option value="Central Library Digital Sandbox">Central Library Digital Sandbox</option>
+                        <option value="Major Dhyan Chand Sports Complex Arena">Major Dhyan Chand Sports Complex Arena</option>
+                        <option value="Tech Park Seminar Hall 302">Tech Park Seminar Hall 302</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Maximum Capacity:</label>
+                      <input
+                        type="number"
+                        className="form-input"
+                        value={evCapacity}
+                        onChange={(e) => setEvCapacity(e.target.value)}
+                        min="10"
+                        max="10000"
+                        required
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  /* EXTERNAL OPPORTUNITY FIELDS */
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', padding: '14px', background: 'rgba(139, 92, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
+                    <div className="form-group">
+                      <label className="form-label">External Registration Link:</label>
+                      <input
+                        type="url"
+                        className="form-input"
+                        placeholder="https://smartindiahackathon.gov.in"
+                        value={evExternalLink}
+                        onChange={(e) => setEvExternalLink(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Host Institution / College:</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. Ministry of Education / IIT Madras"
+                        value={evHostInstitution}
+                        onChange={(e) => setEvHostInstitution(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div className="form-group">
                   <label className="form-label">Description:</label>
                   <textarea
                     className="form-textarea"
                     rows="3"
-                    placeholder="Provide details about the event..."
+                    placeholder="Provide event details, rules, problem statements..."
                     value={evDesc}
                     onChange={(e) => setEvDesc(e.target.value)}
                     required
                   />
                 </div>
-                <button type="submit" className="btn btn-faculty" style={{ width: '100%', marginTop: '8px' }}>
-                  Publish Official Event
+
+                <button type="submit" className="btn btn-faculty" style={{ width: '100%', marginTop: '4px', fontWeight: '800' }}>
+                  ✨ Publish Official Event Now
                 </button>
               </form>
             </div>

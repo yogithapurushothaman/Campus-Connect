@@ -640,20 +640,32 @@ export const StudentDashboard = () => {
                               )}
                             </div>
                             <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                              <span>📍 {evt.venue || evt.locationName || 'Main Campus'}</span>
+                              <span>{evt.scope === 'EXTERNAL' ? `🏛️ ${evt.hostInstitution || evt.venue || 'External Institution'}` : `📍 ${evt.venue || 'Main Campus'}`}</span>
                               <span>•</span>
                               <span>🏷️ {evt.category}</span>
                             </div>
                           </div>
                         </div>
 
-                        <button 
-                          onClick={() => handleRSVP(evt.title, evt.id)} 
-                          className="btn btn-secondary btn-sm"
-                          style={{ fontWeight: '700', fontSize: '0.75rem', flexShrink: 0 }}
-                        >
-                          {rsvpedEvents.has(evt.title) || rsvpedEvents.has(evt.id) ? 'RSVP\'d ✅' : 'RSVP'}
-                        </button>
+                        {evt.scope === 'EXTERNAL' && evt.externalLink ? (
+                          <a 
+                            href={evt.externalLink.startsWith('http') ? evt.externalLink : `https://${evt.externalLink}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="btn btn-secondary btn-sm"
+                            style={{ fontWeight: '800', fontSize: '0.75rem', flexShrink: 0, color: '#8B5CF6', textDecoration: 'none' }}
+                          >
+                            Apply ↗
+                          </a>
+                        ) : (
+                          <button 
+                            onClick={() => handleRSVP(evt.title, evt.id)} 
+                            className="btn btn-secondary btn-sm"
+                            style={{ fontWeight: '700', fontSize: '0.75rem', flexShrink: 0 }}
+                          >
+                            {rsvpedEvents.has(evt.title) || rsvpedEvents.has(evt.id) ? 'RSVP\'d ✅' : 'RSVP'}
+                          </button>
+                        )}
                       </div>
                     ))
                   ) : (
@@ -1234,11 +1246,25 @@ export const StudentDashboard = () => {
                   </div>
                   <h3 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>{ev.title}</h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.55' }}>{ev.description}</p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>📍 {ev.venue || ev.locationName || 'Main Campus'}</span>
-                    <button onClick={() => handleRSVP(ev.title, ev.id)} className="btn btn-primary btn-sm" style={{ fontWeight: '700' }}>
-                      {rsvpedEvents.has(ev.id) || rsvpedEvents.has(ev.title) ? '✅ Confirmed' : 'Register Now'}
-                    </button>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-color)', flexWrap: 'wrap', gap: '8px' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                      {ev.scope === 'EXTERNAL' ? `🏛️ Host: ${ev.hostInstitution || ev.venue || 'External Host'}` : `📍 Venue: ${ev.venue || 'Main Campus'}`}
+                    </span>
+                    {ev.scope === 'EXTERNAL' && ev.externalLink ? (
+                      <a
+                        href={ev.externalLink.startsWith('http') ? ev.externalLink : `https://${ev.externalLink}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-primary btn-sm"
+                        style={{ fontWeight: '800', background: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)', color: '#FFF', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      >
+                        Apply Externally ↗
+                      </a>
+                    ) : (
+                      <button onClick={() => handleRSVP(ev.title, ev.id)} className="btn btn-primary btn-sm" style={{ fontWeight: '700' }}>
+                        {rsvpedEvents.has(ev.id) || rsvpedEvents.has(ev.title) ? '✅ Confirmed' : 'Register Now'}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))
