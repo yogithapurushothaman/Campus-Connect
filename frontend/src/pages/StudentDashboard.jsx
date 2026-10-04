@@ -393,7 +393,7 @@ export const StudentDashboard = () => {
                   YOUR CAMPUS.<br />FULLY UNIFIED.
                 </h1>
                 <p style={{ fontSize: '1.05rem', fontWeight: '500', color: 'var(--text-muted)', margin: '14px 0 0 0', lineHeight: '1.55', maxWidth: '520px' }}>
-                  Welcome back, {user?.name?.split(' ')[0] || 'Student'} 👋. Welcome to the Campus Connect Nexus. A new era of student life and digital connectivity.
+                  Welcome back, {user?.name?.split(' ')[0] || 'Student'} 👋. Welcome to the COVAL Nexus. A new era of student life and digital connectivity.
                 </p>
               </div>
 

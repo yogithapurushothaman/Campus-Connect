@@ -113,12 +113,12 @@ export const MasterAppShell = ({
             {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
           
-          <Link to="/" className="brand-logo-link">
-            <div className="brand-logo-icon">
-              <GraduationCap size={22} color="#FFFFFF" />
-            </div>
+          <Link to="/" className="brand-logo-link" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img src="/coval_logo.png" alt="COVAL Logo" style={{ height: '36px', borderRadius: '8px', objectFit: 'contain' }} />
             <div className="brand-logo-text">
-              <span>Campus<span style={{ color: 'var(--primary-purple)' }}>Connect</span><span style={{ color: 'var(--primary-purple)' }}>.</span></span>
+              <span style={{ fontWeight: '900', letterSpacing: '0.04em', fontSize: '1.35rem', textTransform: 'uppercase' }}>
+                CO<span style={{ color: 'var(--primary-purple)' }}>VAL</span><span style={{ color: 'var(--primary-purple)' }}>.</span>
+              </span>
               <span className={`brand-role-badge ${isFaculty ? 'badge-faculty' : 'badge-student'}`}>
                 {isFaculty ? 'Faculty' : 'Student'}
               </span>

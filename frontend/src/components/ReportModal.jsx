@@ -100,7 +100,7 @@ export const ReportModal = ({ isOpen, onClose, contentType, contentId, onSuccess
         </div>
 
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '20px' }}>
-          Help us keep Campus Connect safe. Let us know what is wrong with this {contentType === 'team_request' ? 'Team Request' : 'Club Update'}.
+          Help us keep COVAL safe. Let us know what is wrong with this {contentType === 'team_request' ? 'Team Request' : 'Club Update'}.
         </p>
 
         {errorMsg && (

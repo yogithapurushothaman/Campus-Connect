@@ -51,9 +51,11 @@ export const Navbar = () => {
 
   return (
     <header className="navbar" style={{ zIndex: 1000 }}>
-      <Link to={user ? (isFaculty ? '/faculty-dashboard' : '/student-dashboard') : '/'} className="brand-logo">
-        <GraduationCap className="w-7 h-7 text-indigo-600" style={{ color: 'var(--primary-purple)', width: 28, height: 28 }} />
-        <span>Campus<span style={{ color: 'var(--primary-purple)' }}>Connect</span><span style={{ color: 'var(--primary-purple)' }}>.</span></span>
+      <Link to={user ? (isFaculty ? '/faculty-dashboard' : '/student-dashboard') : '/'} className="brand-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <img src="/coval_logo.png" alt="COVAL Logo" style={{ height: '34px', borderRadius: '6px', objectFit: 'contain' }} />
+        <span style={{ fontWeight: '900', letterSpacing: '0.04em', fontSize: '1.35rem', textTransform: 'uppercase' }}>
+          CO<span style={{ color: 'var(--primary-purple)' }}>VAL</span><span style={{ color: 'var(--primary-purple)' }}>.</span>
+        </span>
         {user && (
           <span className={`brand-badge ${isFaculty ? 'badge-faculty' : 'badge-student'}`}>
             {isFaculty ? 'Faculty Portal' : 'Student Portal'}
