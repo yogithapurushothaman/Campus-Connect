@@ -133,7 +133,7 @@ export const ClubPage = ({ club, currentUser, onToggleJoin, onReportInitiate, on
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-            <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)', background: '#f1f5f9', padding: '6px 12px', borderRadius: '8px' }}>
+            <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--primary-purple)', background: 'var(--primary-light)', padding: '6px 14px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
               👥 {memberCount} {memberCount === 1 ? 'Member' : 'Members'}
             </span>
             <button 
@@ -159,22 +159,22 @@ export const ClubPage = ({ club, currentUser, onToggleJoin, onReportInitiate, on
         {/* Club Details Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginTop: '12px' }}>
           {club.leadName && (
-            <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            <div style={{ padding: '16px', background: 'var(--bg-page)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
               <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-subtle)', textTransform: 'uppercase', marginBottom: '4px' }}>
                 Club Leader
               </div>
-              <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>{club.leadName}</div>
-              {club.leadEmail && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{club.leadEmail}</div>}
+              <div style={{ fontWeight: '800', fontSize: '0.9rem', color: 'var(--text-main)' }}>{club.leadName}</div>
+              {club.leadEmail && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>{club.leadEmail}</div>}
             </div>
           )}
 
           {club.facultyAdvisor && (
-            <div style={{ padding: '16px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+            <div style={{ padding: '16px', background: 'var(--bg-page)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-subtle)', textTransform: 'uppercase', marginBottom: '4px' }}>
                  Faculty Advisor
                </div>
-               <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>{club.facultyAdvisor.name}</div>
-               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{club.facultyAdvisor.email}</div>
+               <div style={{ fontWeight: '800', fontSize: '0.9rem', color: 'var(--text-main)' }}>{club.facultyAdvisor.name}</div>
+               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px' }}>{club.facultyAdvisor.email}</div>
             </div>
           )}
         </div>
@@ -187,10 +187,10 @@ export const ClubPage = ({ club, currentUser, onToggleJoin, onReportInitiate, on
           {club.announcements && club.announcements.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {club.announcements.map((ann) => (
-                <div key={ann.id} className="glass-card" style={{ padding: '16px 20px', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                <div key={ann.id} className="glass-card" style={{ padding: '16px 20px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '9999px', background: 'rgba(107, 33, 168, 0.1)', color: '#6b21a8', fontWeight: '700' }}>
+                      <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '9999px', background: 'var(--primary-light)', color: 'var(--primary-purple)', fontWeight: '700' }}>
                         {ann.badge || 'Update'}
                       </span>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{ann.date}</span>

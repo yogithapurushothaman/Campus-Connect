@@ -121,7 +121,7 @@ export const MyComplaintsTracker = ({ complaints = [], loading = false, onRefres
           style={{
             textAlign: 'center',
             padding: '40px 20px',
-            background: '#F8FAFC',
+            background: 'var(--bg-page)',
             borderRadius: 'var(--radius-md)',
             border: '1px dashed var(--border-color)',
           }}
@@ -142,7 +142,7 @@ export const MyComplaintsTracker = ({ complaints = [], loading = false, onRefres
               <div
                 key={cmp.id}
                 style={{
-                  background: '#FFFFFF',
+                  background: 'var(--bg-card)',
                   padding: '18px',
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-color)',
@@ -167,7 +167,7 @@ export const MyComplaintsTracker = ({ complaints = [], loading = false, onRefres
                         borderRadius: 'var(--radius-full)',
                         fontSize: '0.75rem',
                         fontWeight: '600',
-                        background: '#EEF2FF',
+                        background: 'rgba(139, 92, 246, 0.12)',
                         color: 'var(--primary)',
                       }}
                     >
@@ -203,7 +203,7 @@ export const MyComplaintsTracker = ({ complaints = [], loading = false, onRefres
                 </div>
 
                 <div>
-                  <h4 style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '4px' }}>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--text-main)', marginBottom: '4px' }}>
                     {cmp.title}
                   </h4>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', lineHeight: '1.45' }}>
@@ -211,7 +211,7 @@ export const MyComplaintsTracker = ({ complaints = [], loading = false, onRefres
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-subtle)', borderTop: '1px solid #F1F5F9', paddingTop: '8px', marginTop: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-subtle)', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '4px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <Calendar size={12} />
                     <span>Submitted: {formatDate(cmp.createdAt || cmp.created_at)}</span>
