@@ -96,6 +96,17 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  const switchRole = (newRole) => {
+    if (!user) return;
+    const updatedUser = {
+      ...user,
+      role: newRole,
+      roleDisplay: newRole === 'FACULTY' ? 'FACULTY' : 'STUDENT'
+    };
+    setUser(updatedUser);
+    localStorage.setItem('campusconnect_user', JSON.stringify(updatedUser));
+  };
+
   const value = {
     user,
     token,
@@ -105,6 +116,7 @@ export const AuthProvider = ({ children }) => {
     isStudent: user?.role === 'STUDENT',
     login,
     logout,
+    switchRole,
     authFetch,
   };
 
