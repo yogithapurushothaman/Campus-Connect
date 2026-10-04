@@ -18,18 +18,8 @@ export const ProtectedRoute = ({ children, requiredRole }) => {
   }
 
   if (!isAuthenticated || !user) {
-    return <Navigate to="/" state={{ from: location }} replace />;
-  }
-
-  const userRole = user.role?.toUpperCase();
-  const isFacultyRole = userRole === 'FACULTY' || userRole === 'STAFF';
-
-  if (requiredRole === 'FACULTY' && !isFacultyRole) {
-    return <Navigate to="/student-dashboard" replace />;
-  }
-
-  if (requiredRole === 'STUDENT' && isFacultyRole) {
-    return <Navigate to="/faculty-dashboard" replace />;
+    const targetLogin = requiredRole === 'FACULTY' ? '/login/faculty' : '/login/student';
+    return <Navigate to={targetLogin} state={{ from: location }} replace />;
   }
 
   return children;

@@ -1,12 +1,17 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LandingPage } from './pages/LandingPage';
 import { StudentLogin } from './pages/StudentLogin';
 import { FacultyLogin } from './pages/FacultyLogin';
 import { StudentDashboard } from './pages/StudentDashboard';
 import { FacultyDashboard } from './pages/FacultyDashboard';
+
+const DashboardRedirect = () => {
+  const { isFaculty } = useAuth();
+  return <Navigate to={isFaculty ? "/faculty-dashboard" : "/student-dashboard"} replace />;
+};
 
 function App() {
   return (
@@ -32,6 +37,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="FACULTY">
                 <FacultyDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardRedirect />
               </ProtectedRoute>
             }
           />
