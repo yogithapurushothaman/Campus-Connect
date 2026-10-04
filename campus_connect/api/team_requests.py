@@ -8,8 +8,12 @@ team_requests_bp = Blueprint("team_requests", __name__, url_prefix="/api/team-re
 @team_requests_bp.route("", methods=["GET"])
 @login_required
 def get_team_requests():
+    scope = request.args.get("scope", "").strip().upper()
     session = db_session()
-    requests = session.query(TeamRequest).order_by(TeamRequest.created_at.desc()).all()
+    query = session.query(TeamRequest)
+    if scope in ("INTERNAL", "EXTERNAL"):
+        query = query.filter(TeamRequest.scope == scope)
+    requests = query.order_by(TeamRequest.created_at.desc()).all()
     return jsonify({"teamRequests": [r.to_dict() for r in requests]}), 200
 
 @team_requests_bp.route("", methods=["POST"])
@@ -18,6 +22,9 @@ def create_team_request():
     data = request.get_json() or {}
     title = data.get("title", "").strip()
     category = data.get("category", "Hackathon").strip()
+    scope = data.get("scope", "INTERNAL").strip().upper()
+    if scope not in ("INTERNAL", "EXTERNAL"):
+        scope = "INTERNAL"
     description = data.get("description", "").strip()
     max_members = data.get("maxMembers", 5)
 
@@ -38,6 +45,7 @@ def create_team_request():
     team_req = TeamRequest(
         title=title,
         category=category,
+        scope=scope,
         description=description,
         max_members=max_members,
         creator_id=g.session["id"]

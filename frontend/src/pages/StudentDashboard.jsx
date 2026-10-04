@@ -47,13 +47,20 @@ export const StudentDashboard = () => {
 
   const loadEventsByScope = async (scope) => {
     try {
-      const res = await authFetch(`/api/events?scope=${scope}`);
-      if (res.ok) {
-        const d = await res.json();
+      const [evRes, teamRes] = await Promise.all([
+        authFetch(`/api/events?scope=${scope}`),
+        authFetch(`/api/team-requests?scope=${scope}`)
+      ]);
+      if (evRes.ok) {
+        const d = await evRes.json();
         setEvents(d.events || []);
       }
+      if (teamRes.ok) {
+        const d = await teamRes.json();
+        setTeamRequests(d.teamRequests || []);
+      }
     } catch (err) {
-      console.error('Failed to load events by scope:', err);
+      console.error('Failed to load data by scope:', err);
     }
   };
 
@@ -1078,22 +1085,32 @@ export const StudentDashboard = () => {
     return (
       <MasterAppShell activeNav={activeView} onNavChange={setActiveView} searchQuery={searchQuery} onSearchChange={setSearchQuery}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
             <button onClick={() => setActiveView('hub')} className="btn btn-secondary btn-sm" style={{ fontWeight: '700' }}>
               ← Back to Hub
             </button>
             <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0 }}>Team Finder & Matchmaking</h2>
+            <SegmentedToggle
+              options={[
+                { id: 'INTERNAL', label: 'Campus Events' },
+                { id: 'EXTERNAL', label: 'External Competitions' }
+              ]}
+              activeId={eventScope}
+              onChange={handleScopeChange}
+            />
           </div>
           <div className="bento-card" style={{ padding: '28px' }}>
             {teamFinderMode === 'feed' ? (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ background: 'rgba(37, 99, 235, 0.1)', padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Users size={22} style={{ color: 'var(--primary)' }} />
                     </div>
                     <div>
-                      <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>Team Finder Feed</h3>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+                        Team Finder Feed ({eventScope === 'EXTERNAL' ? 'External Competitions' : 'Campus Events'})
+                      </h3>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Match with teammates for hackathons, sports & study</span>
                     </div>
                   </div>

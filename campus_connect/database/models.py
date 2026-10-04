@@ -547,6 +547,7 @@ class TeamRequest(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     title = Column(String(200), nullable=False)
     category = Column(String(50), default="Sports", nullable=False)
+    scope = Column(String(20), default="INTERNAL", nullable=False)
     description = Column(Text, nullable=False)
     max_members = Column(Integer, default=5, nullable=False)
     creator_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
@@ -561,6 +562,7 @@ class TeamRequest(Base):
             "id": self.id,
             "title": self.title,
             "category": self.category,
+            "scope": self.scope or "INTERNAL",
             "description": self.description,
             "maxMembers": self.max_members,
             "creatorId": self.creator_id,
@@ -568,6 +570,30 @@ class TeamRequest(Base):
             "creatorAvatar": self.creator.avatar if self.creator else "",
             "createdAt": self.created_at.isoformat() if self.created_at else None,
             "members": [m.to_dict() for m in self.members]
+        }
+
+class ClubDelegation(Base):
+    __tablename__ = "club_delegations"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    student_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    student_name = Column(String(100), nullable=False)
+    student_email = Column(String(255), nullable=False)
+    club_name = Column(String(100), nullable=False)
+    role = Column(String(100), nullable=False)
+    granted_by_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    created_at = Column(DateTime, default=utc_now)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "studentId": self.student_id,
+            "studentName": self.student_name,
+            "studentEmail": self.student_email,
+            "clubName": self.club_name,
+            "role": self.role,
+            "grantedById": self.granted_by_id,
+            "createdAt": self.created_at.isoformat() if self.created_at else None,
         }
 
 class TeamMember(Base):

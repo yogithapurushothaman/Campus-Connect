@@ -9,7 +9,7 @@ from campus_connect.core.middleware import login_required, require_faculty
 from campus_connect.api.auth import auth_bp
 from campus_connect.api.events import events_bp, faculty_events_bp
 from campus_connect.api.activities import activities_bp
-from campus_connect.api.clubs import clubs_bp
+from campus_connect.api.clubs import clubs_bp, faculty_clubs_bp
 from campus_connect.api.complaints import complaints_bp, admin_bp
 from campus_connect.api.map import map_bp
 from campus_connect.api.ai import ai_bp
@@ -51,6 +51,7 @@ def create_app():
     app.register_blueprint(faculty_events_bp)
     app.register_blueprint(activities_bp)
     app.register_blueprint(clubs_bp)
+    app.register_blueprint(faculty_clubs_bp)
     app.register_blueprint(complaints_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(map_bp)

@@ -189,8 +189,10 @@ def toggle_club_membership(club_id):
             "club": club.to_dict()
         }), 200
 
+faculty_clubs_bp = Blueprint("faculty_clubs", __name__, url_prefix="/api/faculty")
+
 @clubs_bp.route("/grant-club-access", methods=["POST"])
-@clubs_bp.route("/faculty/grant-club-access", methods=["POST"])
+@faculty_clubs_bp.route("/grant-club-access", methods=["POST"])
 @login_required
 def grant_club_access():
     user_role = g.session.get("role", "STUDENT").upper()
@@ -205,7 +207,7 @@ def grant_club_access():
     if not student_email or not club_name or not role:
         return jsonify({"error": "Student email, club name, and role are required."}), 400
 
-    from campus_connect.database.models import User
+    from campus_connect.database.models import User, ClubDelegation
     session = db_session()
     student = session.query(User).filter_by(email=student_email).first()
     if not student:
@@ -217,13 +219,33 @@ def grant_club_access():
     if club and role.lower() in ("president", "lead", "club lead"):
         club.lead_email = student.email
         club.lead_name = student.name
-    
+
+    # Save to ClubDelegation table
+    delegation = ClubDelegation(
+        student_id=student.id,
+        student_name=student.name,
+        student_email=student.email,
+        club_name=target_club_name,
+        role=role,
+        granted_by_id=g.session["id"]
+    )
+    session.add(delegation)
     session.commit()
 
     return jsonify({
         "message": f"Access granted. {student_email} is now recognized as {role} of {target_club_name}.",
         "student": student.to_dict(),
         "role": role,
-        "clubName": target_club_name
+        "clubName": target_club_name,
+        "delegation": delegation.to_dict()
     }), 200
+
+@faculty_clubs_bp.route("/delegations", methods=["GET"])
+@login_required
+def get_faculty_delegations():
+    from campus_connect.database.models import ClubDelegation
+    session = db_session()
+    delegations = session.query(ClubDelegation).order_by(ClubDelegation.created_at.desc()).all()
+    return jsonify({"delegations": [d.to_dict() for d in delegations]}), 200
+
 

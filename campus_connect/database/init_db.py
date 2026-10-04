@@ -40,6 +40,34 @@ def init_database():
     except Exception:
         session.rollback()
 
+    try:
+        from sqlalchemy import text
+        session.execute(text("ALTER TABLE team_requests ADD COLUMN scope VARCHAR(20) DEFAULT 'INTERNAL'"))
+        session.commit()
+    except Exception:
+        session.rollback()
+
+    # Seed default delegations if table exists and empty
+    try:
+        from campus_connect.database.models import ClubDelegation
+        if session.query(ClubDelegation).count() == 0:
+            del1 = ClubDelegation(
+                student_name="Ananya Sharma",
+                student_email="ananya@campus.edu",
+                club_name="ACM Student Chapter & Coding Club",
+                role="President"
+            )
+            del2 = ClubDelegation(
+                student_name="Rohan Verma",
+                student_email="rohan@campus.edu",
+                club_name="Robotics & Autonomous Systems Club",
+                role="Event Coordinator"
+            )
+            session.add_all([del1, del2])
+            session.commit()
+    except Exception as e:
+        session.rollback()
+
     # Check if data already seeded
     existing_faculty = session.query(User).filter_by(email="prof.vikram@college.edu").first()
     if existing_faculty:

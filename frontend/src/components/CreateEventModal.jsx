@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { X, Calendar, MapPin, ExternalLink, Building2, Users, Sparkles } from 'lucide-react';
 import { SegmentedToggle } from './SegmentedToggle';
+import { useAuth } from '../context/AuthContext';
 
 export const CreateEventModal = ({ isOpen, onClose, onSubmitSuccess }) => {
+  const { authFetch } = useAuth();
   const [scope, setScope] = useState('INTERNAL'); // 'INTERNAL' | 'EXTERNAL'
   
   // Shared fields
@@ -41,7 +43,7 @@ export const CreateEventModal = ({ isOpen, onClose, onSubmitSuccess }) => {
     };
 
     try {
-      const res = await fetch('/api/faculty/events', {
+      const res = await authFetch('/api/faculty/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
