@@ -508,13 +508,23 @@ body {
   padding: 28px;
   box-shadow: 0 10px 30px -10px rgba(76, 29, 149, 0.08), 0 4px 12px rgba(76, 29, 149, 0.03);
   transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s ease, border-color 0.28s ease;
-  background: #ffffff;
-  border: 1px solid rgba(231, 226, 219, 0.9);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
   overflow: hidden;
+}
+
+.bento-card h1,
+.bento-card h2,
+.bento-card h3,
+.bento-card h4,
+.bento-card h5,
+.bento-card h6 {
+  color: var(--text-main);
 }
 
 .bento-card:hover {
@@ -530,6 +540,13 @@ body {
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 14px 38px -6px rgba(88, 28, 135, 0.45);
+}
+
+.bento-hero-blue h1,
+.bento-hero-blue h2,
+.bento-hero-blue h3,
+.bento-hero-blue h4 {
+  color: #ffffff !important;
 }
 
 .bento-hero-blue::before {
@@ -553,6 +570,13 @@ body {
   box-shadow: 0 12px 32px -6px rgba(225, 29, 72, 0.4);
 }
 
+.bento-campus-care h1,
+.bento-campus-care h2,
+.bento-campus-care h3,
+.bento-campus-care h4 {
+  color: #ffffff !important;
+}
+
 .bento-campus-care::before {
   content: '';
   position: absolute;
@@ -572,44 +596,44 @@ body {
 .bento-active-teams {
   grid-column: span 2;
   grid-row: span 1;
-  background: #ffffff;
-  border-color: rgba(226, 232, 240, 0.9);
+  background: var(--bg-card);
+  border-color: var(--border-color);
   color: var(--text-main);
 }
 
 .bento-notices {
   grid-column: span 1;
   grid-row: span 1;
-  background: #ffffff;
-  border-color: rgba(226, 232, 240, 0.9);
+  background: var(--bg-card);
+  border-color: var(--border-color);
   color: var(--text-main);
 }
 
 .bento-map {
   grid-column: span 2;
   grid-row: span 1;
-  background: radial-gradient(#e2e8f0 1.5px, transparent 1.5px) #ffffff;
+  background: radial-gradient(var(--border-color) 1.5px, transparent 1.5px) var(--bg-card);
   background-size: 20px 20px;
-  border-color: rgba(226, 232, 240, 0.9);
+  border-color: var(--border-color);
   color: var(--text-main);
   cursor: pointer;
 }
 
 .bento-map:hover {
-  background-color: #f8fafc;
+  background-color: var(--bg-card-hover);
 }
 
 .bento-profile-card {
   grid-column: span 1;
   grid-row: span 1;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-color: rgba(226, 232, 240, 0.9);
+  background: var(--bg-card);
+  border-color: var(--border-color);
   color: var(--text-main);
   cursor: pointer;
 }
 
 .bento-profile-card:hover {
-  background-color: #ffffff;
+  background-color: var(--bg-card-hover);
 }
 
 /* Leaflet map styles and z-index corrections */

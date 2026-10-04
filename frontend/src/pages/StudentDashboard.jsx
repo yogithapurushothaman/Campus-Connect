@@ -1014,11 +1014,11 @@ export const StudentDashboard = () => {
                       const isApproved = isCreator || (userMember && userMember.status === 'approved');
 
                       return (
-                        <div key={req.id} style={{ padding: '16px', background: '#f8fafc', borderRadius: '14px', border: '1px solid rgba(226, 232, 240, 0.9)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '14px' }}>
+                        <div key={req.id} style={{ padding: '16px', background: 'var(--bg-page)', borderRadius: '14px', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '14px' }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                              <span style={{ fontWeight: '800', fontSize: '0.95rem' }}>{req.title}</span>
-                              <span style={{ fontSize: '0.725rem', padding: '2px 10px', borderRadius: '9999px', background: '#e2e8f0', color: '#475569', fontWeight: '700' }}>{req.category}</span>
+                              <span style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-main)' }}>{req.title}</span>
+                              <span style={{ fontSize: '0.725rem', padding: '2px 10px', borderRadius: '9999px', background: 'var(--primary-light)', color: 'var(--primary-purple)', fontWeight: '700' }}>{req.category}</span>
                             </div>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0' }}>{req.description}</p>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', fontWeight: '600' }}>
