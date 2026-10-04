@@ -251,10 +251,10 @@ export const FacultyDashboard = () => {
 
             <div>
               <h1 style={{ fontSize: '3.4rem', fontWeight: '900', margin: 0, color: 'var(--text-main)', letterSpacing: '-0.035em', lineHeight: '1.05', textTransform: 'uppercase' }}>
-                FACULTY HUB.<br />FULLY UNIFIED.
+                FACULTY COMMAND CENTER.
               </h1>
               <p style={{ fontSize: '1.05rem', fontWeight: '500', color: 'var(--text-muted)', margin: '14px 0 0 0', lineHeight: '1.55', maxWidth: '520px' }}>
-                Welcome back, {user?.name?.split(' ')[0] || 'Dr. Vikram'} 👋. Triage student complaints on Kanban, publish official campus events, broadcast notices, and review moderation queue in real time.
+                Welcome back. Manage student requests, publish official events, and oversee community activity.
               </p>
             </div>
 
@@ -275,7 +275,7 @@ export const FacultyDashboard = () => {
                   className="btn btn-secondary btn-sm" 
                   style={{ fontWeight: '700', borderRadius: '9999px', padding: '10px 20px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}
                 >
-                  🛡️ Campus Care
+                  🛡️ Student Requests
                 </button>
                 <button 
                   onClick={() => setCreateEventModalOpen(true)} 
@@ -372,7 +372,7 @@ export const FacultyDashboard = () => {
             className={`btn btn-sm ${activeTab === 'complaints' ? 'btn-primary' : 'btn-secondary'}`}
           >
             <ShieldAlert size={16} />
-            <span>Campus Care</span>
+            <span>Student Requests</span>
           </button>
           <button
             onClick={() => setActiveTab('notices')}

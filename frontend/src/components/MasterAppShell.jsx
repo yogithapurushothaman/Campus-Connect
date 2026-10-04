@@ -89,7 +89,7 @@ export const MasterAppShell = ({
   ];
 
   const facultyNavItems = [
-    { id: 'complaints', label: 'Campus Care (Kanban)', icon: ShieldCheck },
+    { id: 'complaints', label: 'Student Requests', icon: ShieldCheck },
     { id: 'events', label: 'Manage Events', icon: Calendar },
     { id: 'heatmap', label: 'Campus Heatmap', icon: MapPin },
     { id: 'moderation', label: 'Moderation Queue', icon: ShieldAlert },
