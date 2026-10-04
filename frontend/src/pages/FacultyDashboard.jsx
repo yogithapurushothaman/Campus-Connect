@@ -43,6 +43,7 @@ export const FacultyDashboard = () => {
   const [evDesc, setEvDesc] = useState('');
   const [evDate, setEvDate] = useState('Dec 15, 2026 • 10:00 AM');
   const [evCategory, setEvCategory] = useState('Workshop');
+  const [evScope, setEvScope] = useState('INTERNAL');
   const [evLocation, setEvLocation] = useState('Alan Turing Computer Science Block');
   const [evCapacity, setEvCapacity] = useState(150);
 
@@ -158,6 +159,7 @@ export const FacultyDashboard = () => {
           description: evDesc,
           date: evDate,
           category: evCategory,
+          scope: evScope,
           venue: evLocation,
           locationName: evLocation,
           capacity: evCapacity,
@@ -503,20 +505,31 @@ export const FacultyDashboard = () => {
                         {/* Event Category & Title */}
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '10px' }}>
-                            <span
-                              style={{
-                                background: 'rgba(139, 92, 246, 0.12)',
-                                color: 'var(--primary-purple)',
-                                padding: '4px 10px',
-                                borderRadius: '10px',
-                                fontSize: '0.75rem',
-                                fontWeight: '700',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.04em'
-                              }}
-                            >
-                              {ev.category || 'Official Event'}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span
+                                style={{
+                                  background: 'rgba(139, 92, 246, 0.12)',
+                                  color: 'var(--primary-purple)',
+                                  padding: '4px 10px',
+                                  borderRadius: '10px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: '700',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.04em'
+                                }}
+                              >
+                                {ev.category || 'Official Event'}
+                              </span>
+                              {ev.scope === 'EXTERNAL' ? (
+                                <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#8B5CF6', background: 'rgba(139, 92, 246, 0.15)', border: '1px solid rgba(139, 92, 246, 0.3)', padding: '3px 8px', borderRadius: '9999px' }}>
+                                  🌐 External
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', background: 'rgba(100, 116, 139, 0.12)', border: '1px solid var(--border-color)', padding: '3px 8px', borderRadius: '9999px' }}>
+                                  🏫 Campus
+                                </span>
+                              )}
+                            </div>
                             <span style={{ fontSize: '0.78rem', color: 'var(--text-subtle)', fontWeight: '500' }}>
                               {ev.date}
                             </span>
@@ -631,7 +644,7 @@ export const FacultyDashboard = () => {
                     required
                   />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
                   <div className="form-group">
                     <label className="form-label">Category:</label>
                     <select value={evCategory} onChange={(e) => setEvCategory(e.target.value)} className="form-select">
@@ -642,7 +655,14 @@ export const FacultyDashboard = () => {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Max Student Capacity:</label>
+                    <label className="form-label">Scope:</label>
+                    <select value={evScope} onChange={(e) => setEvScope(e.target.value)} className="form-select">
+                      <option value="INTERNAL">🏫 Campus Only</option>
+                      <option value="EXTERNAL">🌐 External / National</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Max Capacity:</label>
                     <input
                       type="number"
                       className="form-input"

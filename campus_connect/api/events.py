@@ -11,13 +11,24 @@ faculty_events_bp = Blueprint("faculty_events", __name__, url_prefix="/api/facul
 @events_bp.route("", methods=["GET"])
 def get_events():
     author_id = request.args.get("authorId")
+    scope = request.args.get("scope", "").strip().upper()
+    category = request.args.get("category", "").strip()
+
     session = db_session()
     query = session.query(Event)
     if author_id:
         query = query.filter_by(author_id=author_id)
+    if scope in ("INTERNAL", "EXTERNAL"):
+        query = query.filter(Event.scope == scope)
+    if category:
+        query = query.filter(Event.category == category)
     
     events = query.order_by(Event.created_at.desc()).all()
-    return jsonify({"events": [e.to_dict() for e in events]}), 200
+    return jsonify({"events": [e.to_dict() for e in events], "hackathons": [e.to_dict() for e in events]}), 200
+
+@events_bp.route("/hackathons", methods=["GET"])
+def get_hackathons_alias():
+    return get_events()
 
 @events_bp.route("", methods=["POST"])
 @login_required
@@ -33,6 +44,9 @@ def create_event():
     description = data.get("description", "").strip()
     date = data.get("date", "").strip()
     category = data.get("category", "Workshop").strip()
+    scope = data.get("scope", "INTERNAL").strip().upper()
+    if scope not in ("INTERNAL", "EXTERNAL"):
+        scope = "INTERNAL"
     venue = data.get("venue", "").strip() or data.get("locationName", "Main Campus").strip()
     department = data.get("department", g.session.get("department", "General")).strip()
     capacity = int(data.get("capacity", 150))
@@ -47,6 +61,7 @@ def create_event():
         description=description,
         date=date,
         category=category,
+        scope=scope,
         location_name=venue,
         venue=venue,
         department=department,

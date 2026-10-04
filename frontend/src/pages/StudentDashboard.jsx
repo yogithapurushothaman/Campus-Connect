@@ -39,10 +39,28 @@ export const StudentDashboard = () => {
 
   const [activities, setActivities] = useState([]);
   const [events, setEvents] = useState([]);
+  const [eventScope, setEventScope] = useState('INTERNAL');
   const [notices, setNotices] = useState([]);
   const [complaints, setComplaints] = useState([]);
   const [complaintsLoading, setComplaintsLoading] = useState(false);
   const [rsvpedEvents, setRsvpedEvents] = useState(new Set());
+
+  const loadEventsByScope = async (scope) => {
+    try {
+      const res = await authFetch(`/api/events?scope=${scope}`);
+      if (res.ok) {
+        const d = await res.json();
+        setEvents(d.events || []);
+      }
+    } catch (err) {
+      console.error('Failed to load events by scope:', err);
+    }
+  };
+
+  const handleScopeChange = (scope) => {
+    setEventScope(scope);
+    loadEventsByScope(scope);
+  };
 
   // Notifications State
   const [notifications, setNotifications] = useState([]);
@@ -147,7 +165,7 @@ export const StudentDashboard = () => {
       try {
         const [actRes, evRes, cmpRes, ntcRes, teamRes, clubsRes, notifRes] = await Promise.all([
           authFetch('/api/activities'),
-          authFetch('/api/events'),
+          authFetch(`/api/events?scope=${eventScope}`),
           authFetch('/api/complaints/me'),
           authFetch('/api/notices'),
           authFetch('/api/team-requests'),
@@ -576,18 +594,28 @@ export const StudentDashboard = () => {
               )}
 
               {/* UPCOMING EVENTS LIST */}
-              <div className="saas-card">
-                <div className="saas-card-header">
+              <div className="saas-card widget-pop-glow">
+                <div className="saas-card-header" style={{ flexWrap: 'wrap', gap: '12px' }}>
                   <h3 className="saas-card-title">
                     <Calendar size={20} style={{ color: 'var(--primary-purple)' }} />
                     Upcoming Events & Hackathons
                   </h3>
-                  <button 
-                    onClick={() => setActiveView('events')} 
-                    style={{ background: 'none', border: 'none', color: 'var(--primary-purple)', fontWeight: '700', fontSize: '0.825rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                  >
-                    View All ({events.length}) <ArrowRight size={14} />
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                    <SegmentedToggle
+                      options={[
+                        { id: 'INTERNAL', label: 'Campus Events' },
+                        { id: 'EXTERNAL', label: 'External Competitions' }
+                      ]}
+                      activeId={eventScope}
+                      onChange={handleScopeChange}
+                    />
+                    <button 
+                      onClick={() => setActiveView('events')} 
+                      style={{ background: 'none', border: 'none', color: 'var(--primary-purple)', fontWeight: '700', fontSize: '0.825rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      View All ({events.length}) <ArrowRight size={14} />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="saas-list">
@@ -599,7 +627,18 @@ export const StudentDashboard = () => {
                             <Calendar size={18} />
                           </div>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontWeight: '700', fontSize: '0.925rem', color: 'var(--text-main)' }}>{evt.title}</div>
+                            <div style={{ fontWeight: '700', fontSize: '0.925rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span>{evt.title}</span>
+                              {evt.scope === 'EXTERNAL' ? (
+                                <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: '9999px', background: 'rgba(139, 92, 246, 0.15)', color: '#8B5CF6', fontWeight: '800', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+                                  🌐 External
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: '9999px', background: 'rgba(100, 116, 139, 0.12)', color: 'var(--text-muted)', fontWeight: '700', border: '1px solid var(--border-color)' }}>
+                                  🏫 Campus
+                                </span>
+                              )}
+                            </div>
                             <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginTop: '2px', display: 'flex', gap: '8px', alignItems: 'center' }}>
                               <span>📍 {evt.venue || evt.locationName || 'Main Campus'}</span>
                               <span>•</span>
@@ -613,13 +652,13 @@ export const StudentDashboard = () => {
                           className="btn btn-secondary btn-sm"
                           style={{ fontWeight: '700', fontSize: '0.75rem', flexShrink: 0 }}
                         >
-                          {rsvpedEvents.has(evt.title) ? 'RSVP\'d ✅' : 'RSVP'}
+                          {rsvpedEvents.has(evt.title) || rsvpedEvents.has(evt.id) ? 'RSVP\'d ✅' : 'RSVP'}
                         </button>
                       </div>
                     ))
                   ) : (
                     <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.85rem' }}>
-                      No upcoming campus events.
+                      No upcoming {eventScope === 'EXTERNAL' ? 'external competitions' : 'campus events'}.
                     </div>
                   )}
                 </div>
@@ -1158,28 +1197,56 @@ export const StudentDashboard = () => {
     return (
       <MasterAppShell activeNav={activeView} onNavChange={setActiveView} searchQuery={searchQuery} onSearchChange={setSearchQuery}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
             <button onClick={() => setActiveView('hub')} className="btn btn-secondary btn-sm" style={{ fontWeight: '700' }}>
               ← Back to Hub
             </button>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0 }}>Campus Events & Hackathons</h2>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>
+              Campus Events & Hackathons
+            </h2>
+            <SegmentedToggle
+              options={[
+                { id: 'INTERNAL', label: 'Campus Events' },
+                { id: 'EXTERNAL', label: 'External Competitions' }
+              ]}
+              activeId={eventScope}
+              onChange={handleScopeChange}
+            />
           </div>
+          
           <div className="grid-3">
-            {events.map((ev) => (
-              <div key={ev.id} className="bento-card" style={{ padding: '24px', gap: '14px' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--srm-blue)', background: 'var(--srm-blue-light)', padding: '4px 10px', borderRadius: '9999px', alignSelf: 'flex-start' }}>
-                  {ev.category?.toUpperCase() || 'EVENT'}
-                </span>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0 }}>{ev.title}</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>{ev.description}</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-subtle)' }}>📍 {ev.venue || 'Main Campus'}</span>
-                  <button onClick={() => handleRSVP(ev.title, ev.id)} className="btn btn-primary btn-sm">
-                    {rsvpedEvents.has(ev.id) ? '✅ Confirmed' : 'Register'}
-                  </button>
+            {events.length > 0 ? (
+              events.map((ev) => (
+                <div key={ev.id} className="saas-card widget-pop-glow" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--primary-purple)', background: 'var(--primary-light)', padding: '4px 10px', borderRadius: '9999px' }}>
+                      {ev.category?.toUpperCase() || 'EVENT'}
+                    </span>
+                    {ev.scope === 'EXTERNAL' ? (
+                      <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#8B5CF6', background: 'rgba(139, 92, 246, 0.15)', border: '1px solid rgba(139, 92, 246, 0.3)', padding: '4px 10px', borderRadius: '9999px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        🌐 External / National
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', background: 'rgba(100, 116, 139, 0.12)', border: '1px solid var(--border-color)', padding: '4px 10px', borderRadius: '9999px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        🏫 Campus Only
+                      </span>
+                    )}
+                  </div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0, color: 'var(--text-main)' }}>{ev.title}</h3>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, lineHeight: '1.55' }}>{ev.description}</p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--border-color)' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>📍 {ev.venue || ev.locationName || 'Main Campus'}</span>
+                    <button onClick={() => handleRSVP(ev.title, ev.id)} className="btn btn-primary btn-sm" style={{ fontWeight: '700' }}>
+                      {rsvpedEvents.has(ev.id) || rsvpedEvents.has(ev.title) ? '✅ Confirmed' : 'Register Now'}
+                    </button>
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                No events found for {eventScope === 'EXTERNAL' ? 'External Competitions' : 'Campus Events'}.
               </div>
-            ))}
+            )}
           </div>
         </div>
       </MasterAppShell>

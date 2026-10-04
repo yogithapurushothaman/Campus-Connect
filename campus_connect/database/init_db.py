@@ -25,6 +25,13 @@ def init_database():
     except Exception:
         session.rollback()
 
+    try:
+        from sqlalchemy import text
+        session.execute(text("ALTER TABLE events ADD COLUMN scope VARCHAR(20) DEFAULT 'INTERNAL'"))
+        session.commit()
+    except Exception:
+        session.rollback()
+
     # Check if data already seeded
     existing_faculty = session.query(User).filter_by(email="prof.vikram@college.edu").first()
     if existing_faculty:
@@ -71,7 +78,7 @@ def init_database():
     session.add(student_user)
     session.flush()
 
-    # 3. Create Official Events (Authored by Faculty)
+    # 3. Create Official Events (Authored by Faculty) - Internal vs External
     event1 = Event(
         title="National AI & Cloud Hackathon 2026",
         description="Grand 48-hour inter-college AI hackathon with problem statements from top tech companies and cash prizes up to 5 Lakhs.",
@@ -80,6 +87,7 @@ def init_database():
         location_name="Alan Turing Computer Science Block - Main Auditorium",
         department="Computer Science & Engineering",
         capacity=200,
+        scope="EXTERNAL",
         banner_image="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&auto=format&fit=crop&q=80",
         is_official=True,
         author_id=faculty_user.id,
@@ -92,6 +100,7 @@ def init_database():
         location_name="Central Library Digital Sandbox Room 204",
         department="Computer Science & Engineering",
         capacity=100,
+        scope="INTERNAL",
         banner_image="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&auto=format&fit=crop&q=80",
         is_official=True,
         author_id=faculty_user.id,
@@ -104,11 +113,38 @@ def init_database():
         location_name="Major Dhyan Chand Sports Complex Arena",
         department="Student Affairs",
         capacity=500,
+        scope="INTERNAL",
         banner_image="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80",
         is_official=True,
         author_id=faculty_user.id,
     )
-    session.add_all([event1, event2, event3])
+    event4 = Event(
+        title="Smart India Hackathon 2026 (National Edition)",
+        description="National level hackathon tackling real-world problem statements posed by central ministries and industry giants. Registration opening soon!",
+        date="Dec 01-03, 2026 • All Day",
+        category="Hackathon",
+        location_name="Pan-India Partner Nodal Centers",
+        department="Ministry of Education & Innovation Cell",
+        capacity=1000,
+        scope="EXTERNAL",
+        banner_image="https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=800&auto=format&fit=crop&q=80",
+        is_official=True,
+        author_id=faculty_user.id,
+    )
+    event5 = Event(
+        title="Department Tech Symposium 'INTERSECT 2026'",
+        description="Annual intra-department technical paper presentations, coding sprints, and project expo for CSE & ECE undergrads.",
+        date="Dec 10, 2026 • 10:00 AM",
+        category="Seminar",
+        location_name="Alan Turing Seminar Hall 101",
+        department="Computer Science & Engineering",
+        capacity=150,
+        scope="INTERNAL",
+        banner_image="https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&auto=format&fit=crop&q=80",
+        is_official=True,
+        author_id=faculty_user.id,
+    )
+    session.add_all([event1, event2, event3, event4, event5])
     session.flush()
 
     # Create additional sample student accounts for rich registration analytics

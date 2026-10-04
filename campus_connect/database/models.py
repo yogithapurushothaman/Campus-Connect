@@ -65,6 +65,10 @@ class User(Base):
             "createdAt": self.created_at.isoformat() if self.created_at else None,
         }
 
+class EventScope(str, enum.Enum):
+    INTERNAL = "INTERNAL"
+    EXTERNAL = "EXTERNAL"
+
 class Event(Base):
     __tablename__ = "events"
 
@@ -77,6 +81,7 @@ class Event(Base):
     venue = Column(String(100), default="Main Campus")
     department = Column(String(100), default="General")
     capacity = Column(Integer, default=150)
+    scope = Column(String(20), default=EventScope.INTERNAL.value, nullable=False)
     banner_image = Column(String(255), default="https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=80")
     is_official = Column(Boolean, default=True)
     author_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
@@ -99,6 +104,7 @@ class Event(Base):
             "venue": self.venue,
             "department": self.department,
             "capacity": self.capacity or 150,
+            "scope": self.scope or "INTERNAL",
             "registrationCount": reg_count,
             "bannerImage": self.banner_image,
             "isOfficial": self.is_official,
