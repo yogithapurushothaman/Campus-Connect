@@ -7,6 +7,7 @@ import { FloatingNexus3D } from '../components/FloatingNexus3D';
 import { SegmentedToggle } from '../components/SegmentedToggle';
 import { EventAnalyticsModal } from '../components/EventAnalyticsModal';
 import { CreateEventModal } from '../components/CreateEventModal';
+import { DelegateClubAccessCard } from '../components/DelegateClubAccessCard';
 import {
   Briefcase,
   Plus,
@@ -774,9 +775,11 @@ export const FacultyDashboard = () => {
           </section>
         )}
 
-        {/* TAB 4: CLUB ADVISOR WORKBENCH */}
+        {/* TAB 4: CLUB ADVISOR WORKBENCH & DELEGATION */}
         {activeTab === 'clubs' && (
-          <section>
+          <section style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <DelegateClubAccessCard clubs={clubs} onAccessGranted={loadData} />
+
             <div className="glass-card" style={{ padding: '24px' }}>
               <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '16px' }}>👨‍🏫 Student Club Recruitment Applications</h3>
               

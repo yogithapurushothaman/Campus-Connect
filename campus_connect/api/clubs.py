@@ -189,3 +189,41 @@ def toggle_club_membership(club_id):
             "club": club.to_dict()
         }), 200
 
+@clubs_bp.route("/grant-club-access", methods=["POST"])
+@clubs_bp.route("/faculty/grant-club-access", methods=["POST"])
+@login_required
+def grant_club_access():
+    user_role = g.session.get("role", "STUDENT").upper()
+    if user_role not in ("FACULTY", "STAFF"):
+        return jsonify({"error": "Forbidden: Only faculty advisors can grant club admin access."}), 403
+
+    data = request.get_json() or {}
+    student_email = data.get("studentEmail", "").strip() or data.get("email", "").strip()
+    club_name = data.get("clubName", "").strip() or data.get("club", "").strip()
+    role = data.get("role", "Event Coordinator").strip() or data.get("clubRole", "Event Coordinator").strip()
+
+    if not student_email or not club_name or not role:
+        return jsonify({"error": "Student email, club name, and role are required."}), 400
+
+    from campus_connect.database.models import User
+    session = db_session()
+    student = session.query(User).filter_by(email=student_email).first()
+    if not student:
+        return jsonify({"error": f"Student with email '{student_email}' was not found in the campus directory."}), 404
+
+    club = session.query(Club).filter((Club.id == club_name) | (Club.name.ilike(f"%{club_name}%"))).first()
+    target_club_name = club.name if club else club_name
+
+    if club and role.lower() in ("president", "lead", "club lead"):
+        club.lead_email = student.email
+        club.lead_name = student.name
+    
+    session.commit()
+
+    return jsonify({
+        "message": f"Access granted. {student_email} is now recognized as {role} of {target_club_name}.",
+        "student": student.to_dict(),
+        "role": role,
+        "clubName": target_club_name
+    }), 200
+
