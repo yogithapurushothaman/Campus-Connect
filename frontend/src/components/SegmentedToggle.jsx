@@ -26,7 +26,9 @@ export const SegmentedToggle = ({ options, activeId, onChange, size = 'md' }) =>
           <button
             key={option.id}
             type="button"
+            data-active={isActive ? "true" : "false"}
             onClick={() => onChange(option.id)}
+            className="segmented-toggle-btn"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -37,13 +39,21 @@ export const SegmentedToggle = ({ options, activeId, onChange, size = 'md' }) =>
               fontSize: isSmall ? '0.8rem' : '0.875rem',
               fontWeight: '800',
               cursor: 'pointer',
-              border: isActive ? '1px solid transparent' : '1px solid var(--border-color)',
-              backgroundColor: isActive ? 'var(--primary-purple)' : 'transparent',
+              border: isActive ? '1.5px solid transparent' : '1.5px solid var(--border-color)',
+              background: isActive 
+                ? 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' 
+                : 'transparent',
               color: isActive ? '#ffffff' : 'var(--text-main)',
-              boxShadow: isActive ? '0 4px 16px 0 rgba(139, 92, 246, 0.45)' : 'none',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: isActive ? '0 6px 20px -2px rgba(139, 92, 246, 0.5)' : 'none',
+              transition: 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
               outline: 'none',
               userSelect: 'none'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
             }}
           >
             {option.icon && <span style={{ display: 'flex', alignItems: 'center' }}>{option.icon}</span>}
