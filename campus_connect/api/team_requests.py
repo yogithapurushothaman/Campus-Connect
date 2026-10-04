@@ -17,7 +17,7 @@ def get_team_requests():
 def create_team_request():
     data = request.get_json() or {}
     title = data.get("title", "").strip()
-    category = data.get("category", "Sports").strip()
+    category = data.get("category", "Hackathon").strip()
     description = data.get("description", "").strip()
     max_members = data.get("maxMembers", 5)
 
@@ -29,8 +29,8 @@ def create_team_request():
     if not title or not description:
         return jsonify({"error": "Title and description are required."}), 400
 
-    if category not in ["Sports", "Academics", "Gaming"]:
-        category = "Sports"
+    if category not in ["Hackathon", "Clubs", "Sports", "Others"]:
+        category = "Hackathon"
 
     session = db_session()
     

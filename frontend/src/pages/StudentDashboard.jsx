@@ -64,7 +64,7 @@ export const StudentDashboard = () => {
   const [teamFinderMode, setTeamFinderMode] = useState('feed');
   const [newTeamReq, setNewTeamReq] = useState({
     title: '',
-    category: 'Sports',
+    category: 'Hackathon',
     description: '',
     maxMembers: 5
   });
@@ -230,7 +230,7 @@ export const StudentDashboard = () => {
       });
       if (res.ok) {
         showToast('🎯 Team matchmaking request posted!');
-        setNewTeamReq({ title: '', category: 'Sports', description: '', maxMembers: 5 });
+        setNewTeamReq({ title: '', category: 'Hackathon', description: '', maxMembers: 5 });
         setTeamFinderMode('feed');
         // Reload requests
         const teamRes = await authFetch('/api/team-requests');
@@ -602,9 +602,10 @@ export const StudentDashboard = () => {
                         const approvedCount = approvedMembers.length;
                         const isApproved = isCreator || (userMember && userMember.status === 'approved');
                         
-                        let categoryEmoji = '🏀';
-                        if (req.category === 'Academics') categoryEmoji = '📚';
-                        if (req.category === 'Gaming') categoryEmoji = '🎮';
+                        let categoryEmoji = '💻';
+                        if (req.category === 'Clubs') categoryEmoji = '👥';
+                        if (req.category === 'Sports') categoryEmoji = '🏀';
+                        if (req.category === 'Others') categoryEmoji = '✨';
 
                         return (
                           <div key={req.id} className="saas-list-row">
@@ -671,9 +672,10 @@ export const StudentDashboard = () => {
                           className="form-select"
                           style={{ padding: '8px 12px' }}
                         >
+                          <option value="Hackathon">Hackathon</option>
+                          <option value="Clubs">Clubs</option>
                           <option value="Sports">Sports</option>
-                          <option value="Academics">Academics</option>
-                          <option value="Gaming">Gaming</option>
+                          <option value="Others">Others</option>
                         </select>
                       </div>
                     </div>
@@ -1062,9 +1064,10 @@ export const StudentDashboard = () => {
                   <div>
                     <label className="form-label">Category</label>
                     <select value={newTeamReq.category} onChange={(e) => setNewTeamReq(prev => ({ ...prev, category: e.target.value }))} className="form-select">
+                      <option value="Hackathon">Hackathon</option>
+                      <option value="Clubs">Clubs</option>
                       <option value="Sports">Sports</option>
-                      <option value="Academics">Academics</option>
-                      <option value="Gaming">Gaming</option>
+                      <option value="Others">Others</option>
                     </select>
                   </div>
                 </div>
