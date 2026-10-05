@@ -257,6 +257,7 @@ export const StudentDashboard = () => {
       return;
     }
     try {
+      const assignedClub = pubClubName || user?.club_name || user?.clubName || myDelegations?.delegatedClubs?.[0]?.clubName || '';
       const res = await authFetch('/api/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -266,7 +267,8 @@ export const StudentDashboard = () => {
           date: pubDate,
           category: pubCategory,
           scope: pubScope,
-          clubName: pubClubName,
+          club_name: assignedClub,
+          clubName: assignedClub,
           venue: pubScope === 'EXTERNAL' ? pubHostInst || 'External Host' : pubLocation,
           locationName: pubScope === 'EXTERNAL' ? pubHostInst || 'External Host' : pubLocation,
           capacity: pubScope === 'EXTERNAL' ? 1000 : Number(pubCapacity),
@@ -515,7 +517,7 @@ export const StudentDashboard = () => {
                   </button>
 
                   {/* 2. CONDITIONALLY RENDERED CREATION BUTTONS FOR DELEGATED CLUB USERS */}
-                  {(user?.club_role || user?.club_name || user?.clubRole || myDelegations?.isDelegated) && (
+                  {((user?.club_role && user?.club_name) || (user?.clubRole && user?.clubName) || (myDelegations?.isDelegated && myDelegations?.delegatedClubs?.length > 0)) ? (
                     <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                       <button 
                         onClick={() => { setPubCategory('Event'); setShowClubPublisherModal(true); }} 
@@ -529,7 +531,7 @@ export const StudentDashboard = () => {
                         className="btn btn-primary btn-sm" 
                         style={{ background: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)', fontWeight: '800', borderRadius: '9999px', padding: '10px 18px', boxShadow: '0 6px 18px rgba(139,92,246,0.35)' }}
                       >
-                        + Add Hackathon
+                        + Post Hackathon
                       </button>
                       <button 
                         onClick={() => { setPubCategory('Workshop'); setShowClubPublisherModal(true); }} 
@@ -539,7 +541,7 @@ export const StudentDashboard = () => {
                         + Add Workshop
                       </button>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>

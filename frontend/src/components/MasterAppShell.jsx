@@ -162,28 +162,7 @@ export const MasterAppShell = ({
         <div className="app-shell-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {headerActions}
 
-          {/* QUICK ROLE SWITCHER BUTTON */}
-          <button
-            onClick={handleTogglePortalView}
-            className="btn btn-secondary btn-sm"
-            style={{
-              fontSize: '0.75rem',
-              fontWeight: '800',
-              padding: '6px 14px',
-              borderRadius: '9999px',
-              border: '1px solid var(--border-color)',
-              background: isFaculty ? 'rgba(139, 92, 246, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-              color: isFaculty ? '#8B5CF6' : '#2563EB',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer'
-            }}
-            title={isFaculty ? "Switch to Student View" : "Switch to Faculty View"}
-          >
-            <Sparkles size={13} />
-            <span>{isFaculty ? "Switch to Student View" : "Switch to Faculty View"}</span>
-          </button>
+
 
           {/* LIGHT / DARK THEME TOGGLE */}
           <ThemeToggle />
