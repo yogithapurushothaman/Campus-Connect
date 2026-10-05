@@ -427,7 +427,7 @@ export const FacultyDashboard = () => {
               onStatusUpdate={handleStatusUpdated}
               onRefresh={loadData}
             />
-            <DelegateClubAccessCard clubs={clubs} onAccessGranted={loadData} />
+            <DelegateClubAccessCard clubs={clubs} events={events} onAccessGranted={loadData} />
           </section>
         )}
 

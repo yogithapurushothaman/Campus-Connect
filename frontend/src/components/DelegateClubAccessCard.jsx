@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShieldCheck, UserPlus, CheckCircle2, AlertCircle, Building2, User, Award, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export const DelegateClubAccessCard = ({ clubs = [], onAccessGranted }) => {
+export const DelegateClubAccessCard = ({ clubs = [], events = [], onAccessGranted }) => {
   const { authFetch } = useAuth();
   const [studentEmail, setStudentEmail] = useState('');
   const [clubName, setClubName] = useState('');
@@ -265,6 +265,58 @@ export const DelegateClubAccessCard = ({ clubs = [], onAccessGranted }) => {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* 4. FACULTY SOP & AUDIT FEED (STUDENT CLUB EVENT POSTINGS LOG) */}
+      <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '18px', marginTop: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <h4 style={{ fontSize: '0.925rem', fontWeight: '800', color: '#1E293B', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '1rem' }}>📋</span>
+            <span>Faculty SOP Audit Feed (Delegated Club Postings)</span>
+          </h4>
+          <span style={{ fontSize: '0.7rem', color: '#8B5CF6', fontWeight: '700', background: 'rgba(139, 92, 246, 0.1)', padding: '2px 8px', borderRadius: '9999px' }}>
+            Live Audit Stream
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {events && events.filter(e => e.clubName || e.club_name || e.author).length > 0 ? (
+            events.filter(e => e.clubName || e.club_name || e.author).slice(0, 5).map((ev, idx) => (
+              <div 
+                key={ev.id || idx} 
+                style={{ 
+                  background: '#FFFFFF', 
+                  padding: '12px 16px', 
+                  borderRadius: '12px', 
+                  border: '1px solid #E2E8F0', 
+                  borderLeft: '4px solid #8B5CF6',
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '4px' 
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#1E293B' }}>
+                    👑 {ev.author?.name || 'Club Member'} ({ev.clubName || ev.club_name || 'Assigned Club'})
+                  </span>
+                  <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: '9999px', background: ev.scope === 'EXTERNAL' ? 'rgba(139, 92, 246, 0.15)' : 'rgba(16, 185, 129, 0.12)', color: ev.scope === 'EXTERNAL' ? '#8B5CF6' : '#10B981', fontWeight: '800' }}>
+                    {ev.scope === 'EXTERNAL' ? '🌐 External Hackathon' : '🏫 Internal Event'}
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.825rem', color: '#475569', margin: '2px 0' }}>
+                  Posted <strong>{ev.category || 'Event'}</strong>: <span style={{ fontWeight: '700', color: '#8B5CF6' }}>"{ev.title}"</span>
+                </p>
+                <span style={{ fontSize: '0.725rem', color: '#64748B' }}>
+                  ⏰ Scheduled on: {ev.date || 'Dec 20, 2026'} • Venue: {ev.venue || ev.locationName || 'Campus'}
+                </span>
+              </div>
+            ))
+          ) : (
+            <div style={{ padding: '16px', textAlign: 'center', color: '#94A3B8', fontStyle: 'italic', fontSize: '0.825rem', background: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+              No delegated club publications recorded yet. When accessed students post events, they will appear here in real-time.
+            </div>
+          )}
         </div>
       </div>
     </div>
