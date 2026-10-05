@@ -456,7 +456,7 @@ export const StudentDashboard = () => {
               gridTemplateColumns: '1.25fr 1fr', 
               gap: '36px', 
               alignItems: 'center', 
-              padding: '0 0 20px 0',
+              padding: '16px 0 20px 0',
               marginBottom: '12px'
             }}
           >
