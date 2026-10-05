@@ -516,31 +516,24 @@ export const StudentDashboard = () => {
                     + Find Squad
                   </button>
 
-                  {/* 2. CONDITIONALLY RENDERED CREATION BUTTONS FOR DELEGATED CLUB USERS */}
+                  {/* 2. CONDITIONALLY RENDERED SINGLE BOLD + POST EVENT BUTTON FOR DELEGATED CLUB USERS */}
                   {((user?.club_role && user?.club_name) || (user?.clubRole && user?.clubName) || (myDelegations?.isDelegated && myDelegations?.delegatedClubs?.length > 0)) ? (
-                    <div style={{ display: 'inline-flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                      <button 
-                        onClick={() => { setPubCategory('Event'); setShowClubPublisherModal(true); }} 
-                        className="btn btn-primary btn-sm" 
-                        style={{ background: 'var(--primary-purple)', fontWeight: '800', borderRadius: '9999px', padding: '10px 18px', boxShadow: '0 6px 18px rgba(139,92,246,0.35)' }}
-                      >
-                        + Post Event
-                      </button>
-                      <button 
-                        onClick={() => { setPubCategory('Hackathon'); setShowClubPublisherModal(true); }} 
-                        className="btn btn-primary btn-sm" 
-                        style={{ background: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)', fontWeight: '800', borderRadius: '9999px', padding: '10px 18px', boxShadow: '0 6px 18px rgba(139,92,246,0.35)' }}
-                      >
-                        + Post Hackathon
-                      </button>
-                      <button 
-                        onClick={() => { setPubCategory('Workshop'); setShowClubPublisherModal(true); }} 
-                        className="btn btn-secondary btn-sm" 
-                        style={{ fontWeight: '800', borderRadius: '9999px', padding: '10px 18px', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}
-                      >
-                        + Add Workshop
-                      </button>
-                    </div>
+                    <button 
+                      onClick={() => { setPubCategory('Event'); setShowClubPublisherModal(true); }} 
+                      className="btn btn-primary btn-sm" 
+                      style={{ 
+                        background: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)', 
+                        fontWeight: '900', 
+                        fontSize: '0.85rem',
+                        letterSpacing: '0.04em',
+                        borderRadius: '9999px', 
+                        padding: '10px 22px', 
+                        boxShadow: '0 6px 20px rgba(139,92,246,0.4)',
+                        textTransform: 'uppercase'
+                      }}
+                    >
+                      + POST EVENT
+                    </button>
                   ) : null}
                 </div>
               </div>
@@ -1200,8 +1193,9 @@ export const StudentDashboard = () => {
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                     <div className="form-group">
-                      <label className="form-label" style={{ fontWeight: '700' }}>Category:</label>
-                      <select value={pubCategory} onChange={(e) => setPubCategory(e.target.value)} className="form-select">
+                      <label className="form-label" style={{ fontWeight: '700' }}>Event Type / Category:</label>
+                      <select value={pubCategory} onChange={(e) => setPubCategory(e.target.value)} className="form-select" style={{ fontWeight: '600' }}>
+                        <option value="Event">General Event</option>
                         <option value="Hackathon">Hackathon</option>
                         <option value="Workshop">Workshop</option>
                         <option value="Seminar">Seminar</option>
