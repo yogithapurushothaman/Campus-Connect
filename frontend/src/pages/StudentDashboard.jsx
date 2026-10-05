@@ -456,8 +456,8 @@ export const StudentDashboard = () => {
               gridTemplateColumns: '1.25fr 1fr', 
               gap: '36px', 
               alignItems: 'center', 
-              padding: '24px 0 36px 0',
-              marginBottom: '16px'
+              padding: '0 0 20px 0',
+              marginBottom: '12px'
             }}
           >
             {/* Left Column: Bold Agency Typography & Dual Pill Switch */}

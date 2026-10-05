@@ -238,7 +238,7 @@ export const FacultyDashboard = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
         
         {/* TOP AGENCY HERO SECTION (SYNCED WITH STUDENT DASHBOARD) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '32px', alignItems: 'center', minHeight: '380px', padding: '20px 0 30px 0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '32px', alignItems: 'center', padding: '0 0 20px 0' }}>
           {/* Left Column: Headline, Description & Dual Toggle */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
